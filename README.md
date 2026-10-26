@@ -23,11 +23,21 @@ Note : GitHub Pages en plan gratuit publie le site même si le dépôt est priv�
 
 Après une modification, change `CACHE = "ascension-v1"` en `v2`, `v3`… dans `sw.js` pour forcer les téléphones à recharger les fichiers.
 
-## Guide intégré (facultatif)
+## Guide intégré avec Mistral (facultatif)
 
-Onglet **Moi → Brancher mon guide** : colle une clé d’API Claude (créée sur la plateforme développeur de Claude). Le diagnostic, le bivouac, le feu de camp et la halte se font alors directement dans l’app, qui applique la montagne toute seule.
+Mistral n’accepte pas les appels directs depuis une page web. L’app passe donc par un petit relais gratuit chez Cloudflare, qui transmet la demande à Mistral et renvoie la réponse. Il ne stocke rien.
+
+### Créer le relais (une seule fois, 5 minutes)
+
+1. Crée un compte gratuit sur **dash.cloudflare.com**.
+2. Menu **Workers & Pages** → **Create** → **Create Worker** (modèle « Hello World »). Nomme-le `ascension-relais`, puis **Deploy**.
+3. Touche **Edit code**, efface tout, colle le contenu du fichier `relais-cloudflare.js`, puis **Deploy**.
+4. Copie l’adresse du worker, du type `https://ascension-relais.<ton-pseudo>.workers.dev`.
+
+### Brancher le guide
+
+Dans Ascension : **Brancher mon guide** (ou onglet **Moi**) → colle ta clé Mistral, l’adresse du relais, choisis le modèle → **Enregistrer et tester**.
 
 - La clé reste sur le téléphone et n’est jamais incluse dans les sauvegardes.
-- À utiliser uniquement sur ton propre appareil : une clé enregistrée dans un navigateur peut être lue par qui a accès à l’appareil.
-- L’usage est facturé par Anthropic selon la consommation.
+- Le relais n’accepte que les demandes venant de `chaussy91.github.io`. Si ton adresse GitHub change, modifie la ligne `ORIGINE` dans le relais.
 - Sans clé, le copier-coller reste disponible.
