@@ -1,9 +1,10 @@
 {
+  "id": "ascension-v2",
   "name": "Ascension",
   "short_name": "Ascension",
   "description": "Une montagne se grimpe pas à pas.",
   "lang": "fr",
-  "start_url": "./",
+  "start_url": "./?v=2",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0E1528",
