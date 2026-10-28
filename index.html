@@ -180,6 +180,14 @@ TON RÔLE
 - Tu proposes, tu expliques, la personne tranche.
 - Si la personne se dévalorise (« je suis nul », « gros porc », etc.), accueille-le avec chaleur en une phrase, sans faire la morale, et reformule de façon juste et bienveillante avant de continuer.
 
+TON EXPERTISE ET TA MÉTHODE
+- Tu es un coach expérimenté dans le domaine de la personne. Tes conseils doivent être précis, concrets et justes, jamais génériques.
+- Appuie-toi sur les principes reconnus du domaine. En sport d'endurance par exemple : progressivité de la charge (pas plus d'environ 10 % de volume en plus par semaine), environ 80 % du temps en endurance facile et 20 % plus intense, récupération, spécificité vers l'objectif (distance, dénivelé, terrain), affûtage avant l'échéance. En apprentissage : pratique délibérée, répétition espacée, difficulté juste au-dessus du niveau.
+- Pense comme un diagnostic : où en est la personne, où elle veut aller, quel est l'écart, quelles sont ses limites réelles (temps, famille, santé, matériel), puis seulement le plan.
+- Quand un détail compte pour la justesse (format exact d'une course, distance, dénivelé, date, niveau réel), demande-le plutôt que de supposer.
+- Avant chaque proposition, vérifie en silence : est-ce cohérent avec le niveau mesuré ? atteignable dans le temps disponible ? chaque épreuve fait-elle avancer vers l'objectif de l'étape ? Corrige avant de répondre.
+- Explique brièvement le pourquoi de tes choix : la personne doit comprendre la logique, pas seulement suivre.
+
 FABRICATION DES ÉPREUVES
 - Une action concrète et mesurable, faisable dans les contraintes de la personne.
 - 20 minutes par jour et par sentier au maximum : c'est un plafond, pas un objectif. Compose une vraie mini-séance cohérente plutôt que de remplir du temps.
@@ -209,7 +217,7 @@ MISSION : LA PREMIÈRE CONVERSATION ET LES TESTS DE PLACEMENT
 La personne est au camp de base : ne parle PAS des zones ni des niveaux (forêt, pentes, falaise, niveau 1, 2, 3), ne propose aucun sentier ni programme. Parle seulement de son objectif, de sa situation et des tests de placement.
 Les tests de placement sont obligatoires : ne propose jamais de les sauter. Si on te demande ce que c'est, explique simplement : « deux ou trois petits tests simples, que tu feras plus tard quand tu auras le temps, pour savoir d'où tu pars ».
 1. Ouvre par : « Une montagne se grimpe pas à pas. Pas de raccourci, pas de sprint. » Présente-toi en deux phrases, puis dis une seule fois, simplement : « Je ne suis pas médecin : si un jour quelque chose te semble anormal dans ton corps, consulte. » Ne le répète plus ensuite.
-2. Ta toute première question porte TOUJOURS sur l'objectif final (le sommet) : « Quel est ton objectif final, pour quand, et pourquoi c'est important pour toi ? ». Assure-toi d'avoir une échéance (une date ou un mois). Puis conversation de 8 à 12 questions au total, une à la fois : la compétence visée et son pourquoi ; le niveau ressenti ; le temps disponible par jour, le matériel, le lieu, la vie de famille ; blessures ou douleurs actuelles ; motivation, doutes, freins ; le seuil de suffisance (ce qui suffirait vraiment).
+2. Ta toute première question porte TOUJOURS sur l'objectif final (le sommet) : « Quel est ton objectif final, pour quand, et pourquoi c'est important pour toi ? ». Assure-toi d'avoir une échéance (une date ou un mois). Si l'objectif est un événement (course, examen, voyage…), demande ce que la personne sait de son format (distance, dénivelé, durée, niveau requis). Puis conversation de 8 à 12 questions au total, une à la fois : la compétence visée et son pourquoi ; le niveau ressenti ; le temps disponible par jour, le matériel, le lieu, la vie de famille ; blessures ou douleurs actuelles ; motivation, doutes, freins ; le seuil de suffisance (ce qui suffirait vraiment).
 3. Puis propose 1 à 3 tests de placement concrets et sans risque pour mesurer le niveau réel. La personne les fera PLUS TARD, seule, quand elle aura le temps : ne lui demande JAMAIS de les faire maintenant, ne lui demande pas ses résultats, ne construis aucun programme. Précise dans chaque test qu'on peut arrêter à tout moment et qu'on note ce qui a été tenu et le ressenti, jamais « réussi » ou « raté ». Type conseillé : seuil ou unique.
 4. Présente les tests en une phrase chacun maximum, jamais sous forme de fiche détaillée : tous les détails vont dans le bloc JSON. Dans le MÊME message, ajoute directement le bloc JSON.
 5. Ta mission s'arrête là. Termine UNIQUEMENT par ce bloc JSON, sans aucun texte après :
@@ -221,6 +229,7 @@ MISSION : CONSTRUIRE LA MONTAGNE APRÈS LES TESTS DE PLACEMENT
 La première conversation et les tests sont faits (ne recommence pas la conversation, ne redis pas la phrase de prudence).
 1. Interroge le ressenti sur les tests en 1 à 3 questions, une à la fois.
 2. Découpe l'objectif final (le sommet) en 3 sous-objectifs progressifs, un par étape : la forêt, puis les pentes, puis la falaise. Chaque sous-objectif est court (8 mots max), concret et mesurable, et mène au suivant (ex. « Tenir 10 km sous 160 bpm »). Tu gères le temps : donne à chaque étape une durée en jours, pour que la somme tienne jusqu'à l'échéance, avec un peu de marge.
+Vérifie le réalisme : compare le niveau mesuré aux tests avec l'exigence du sommet, et la durée disponible. Si c'est trop ambitieux, dis-le franchement et propose un sommet ou une échéance plus juste.
 3. Construis les épreuves de la FORÊT seulement (1 ou 2 sentiers, 3 à 6 épreuves par sentier selon la personne) : elles servent à atteindre l'objectif de la forêt.
 4. Présente un résumé lisible : le sommet, les 3 étapes avec leurs durées, puis les épreuves de la forêt. La personne valide ou demande UN ajustement.
 5. Termine UNIQUEMENT par ce bloc JSON, sans aucun texte après :
@@ -937,14 +946,47 @@ async function callGuide(messages, system, maxTokens){
   return text;
 }
 function liveText(text){ const el=document.getElementById("live"); if(!el) return; el.hidden=false; el.innerHTML=md(visible(text)); const t=document.getElementById("typing"); if(t) t.remove(); const m=$("#msgs"); if(m) m.scrollTop=m.scrollHeight; }
+function stage(){ return C?.kind==="diag" ? (S?.phase==="placement" ? "diag2" : "diag1") : C?.kind; }
+const REMIND={
+  diag1:"[Rappel pour toi, la personne ne le voit pas : tu es au camp de base. Ne parle ni de forêt, ni de pentes, ni de falaise, ni de niveaux, ni de sentiers, ni de programme. Une seule question courte à la fois. Dès que tu connais l’objectif final et son échéance, le niveau, le temps disponible, les contraintes et les freins, présente 1 à 3 tests en une phrase chacun et termine CE MÊME message par le bloc JSON de placement.]",
+  diag2:"[Rappel pour toi, la personne ne le voit pas : construis maintenant la montagne. Pose au plus 1 à 3 questions sur le ressenti des tests, puis présente le sommet, les 3 étapes avec leurs durées et les épreuves de la forêt, et termine par le bloc JSON de montagne.]",
+  feu:"[Rappel pour toi : une question à la fois, puis termine par le bloc JSON du feu de camp quand la personne a validé.]",
+  bivouac:"[Rappel pour toi : quelques questions, puis termine par le bloc JSON du bivouac.]",
+  halte:"[Rappel pour toi : fais le point sans jugement, puis termine par le bloc JSON de la halte.]"
+};
+const SCHEMA_STAGE={
+  diag1:'{"etape":"placement","cap":"le pourquoi","sommet":"objectif final court","echeance":"","massif":"","tests":[ÉPREUVE]} (1 à 3 tests concrets et sans risque pour mesurer le niveau de départ ; s’il n’y en a pas dans la conversation, propose-les toi-même)',
+  diag2:'{"etape":"montagne","cap":"","sommet":"","echeance":"","massif":"","etapes":[{"zone":"foret","objectif":"","jours":42},{"zone":"pentes","objectif":"","jours":60},{"zone":"falaise","objectif":"","jours":60}],"sentiers":[{"nom":"","pourquoi":"","seuil_suffisance":"","epreuves":[ÉPREUVE]}]}'
+};
+function payload(){
+  const msgs=C.msgs.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role,content:m.content}));
+  const r=REMIND[stage()]; const last=msgs[msgs.length-1];
+  if(r && last && last.role==="user") last.content = `${last.content}\n\n${r}`;
+  return msgs;
+}
 async function send(){
   if(!C || UI.busy) return;
   UI.busy=true; renderChat();
   try{
-    const msgs=C.msgs.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role,content:m.content}));
-    const text=await callGuide(msgs, C.system);
+    const text=await callGuide(payload(), C.system);
     const res=detect(C.kind,text);
     C.msgs.push({role:"assistant",content:text,result:res||undefined});
+  }catch(e){ C.msgs.push({role:"error",content:e.message}); }
+  UI.busy=false; setChat(C); renderChat();
+}
+async function forceFinal(){
+  if(!C || UI.busy) return;
+  UI.busy=true; renderChat();
+  try{
+    const st=stage();
+    const transcript=C.msgs.filter(m=>(m.role==="user"&&!m.hidden)||m.role==="assistant").map(m=>`${m.role==="user"?"PERSONNE":"GUIDE"} : ${m.content}`).join("\n\n");
+    const schema = SCHEMA_STAGE[st] || SCHEMA[C.kind] || SCHEMA.diag;
+    const extra = st==="diag2" ? `\nRésultats des tests de placement : ${S?.placement?.length?placementResults():"voir la conversation"}\nNous sommes le ${new Date().toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})}.` : "";
+    const out = await callGuide([{role:"user",content:`Voici une conversation entre un guide de progression et une personne.${extra}\nÀ partir de ce qui a été dit (sans inventer d’informations personnelles), produis le JSON suivant : ${schema}. ${EP_FMT}. Pour une épreuve « seuil », la mesure est une valeur où plus = mieux. Réponds UNIQUEMENT avec le JSON.\n\nCONVERSATION :\n${transcript}`}], CORE+"\n\nTu produis uniquement du JSON strictement valide.", 6000);
+    const j=extractJSON(out);
+    const res=detect(C.kind, JSON.stringify(j));
+    if(!res) throw new Error("Le guide n’a pas réussi à préparer la suite. Réponds encore à une ou deux de ses questions, puis réessaie.");
+    C.msgs.push({role:"assistant",content:"Voici ce que j’ai retenu de notre échange.\n"+JSON.stringify(j),result:res});
   }catch(e){ C.msgs.push({role:"error",content:e.message}); }
   UI.busy=false; setChat(C); renderChat();
 }
@@ -960,7 +1002,7 @@ function renderChat(){
   }).join("");
   $("#chat").innerHTML=`<div class="chat-head"><img src="camp-${sceneFor(C.kind)}.jpg" alt=""><div class="t"><h3>${CTITLE[C.kind]}</h3><p style="font-family:var(--serif);font-style:italic;color:var(--gold-soft);font-size:14px;margin:0">${esc(guideName()?.name||"")}</p><p class="muted" style="font-size:13px">${esc(guideName()?.name?"Ton guide de montagne":"Guide de montagne")}</p></div><button type="button" class="x" data-a="closeChat" aria-label="Fermer la conversation"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
 <div class="msgs" id="msgs" aria-live="polite">${items}${UI.busy?`<div class="typing" id="typing" aria-label="Le guide réfléchit"><i></i><i></i><i></i></div><div class="msg guide" id="live" hidden></div>`:""}</div>
-${!UI.busy && !C.msgs.some(m=>m.result && !m.applied) && C.msgs.filter(m=>m.role==="assistant").length>=3 ? `<div style="padding:0 12px 4px;display:flex;justify-content:flex-end"><button type="button" class="btn ghost small" data-a="askFinal">${C.kind==="diag"?"Obtenir mes tests / ma montagne":"Obtenir le bilan final"}</button></div>`:""}
+${!UI.busy && !C.msgs.some(m=>m.result && !m.applied) && C.msgs.filter(m=>m.role==="assistant").length>=2 ? `<div style="padding:0 12px 4px;display:flex;justify-content:flex-end"><button type="button" class="btn ghost small" data-a="askFinal">${stage()==="diag1"?"Obtenir mes tests de placement":stage()==="diag2"?"Construire ma montagne":"Obtenir le bilan final"}</button></div>`:""}
 <div class="composer"><textarea id="cmsg" placeholder="Ta réponse" aria-label="Ta réponse" ${UI.busy?"disabled":""}>${esc(draft)}</textarea><button type="button" class="btn" data-a="sendMsg" aria-label="Envoyer" ${UI.busy?"disabled":""}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>`;
   const m=$("#msgs"); m.scrollTop=m.scrollHeight;
   const ta=$("#cmsg"); ta.addEventListener("input",()=>{ draft=ta.value; ta.style.height="auto"; ta.style.height=Math.min(ta.scrollHeight,140)+"px"; });
@@ -1013,7 +1055,7 @@ function afterValidate(s){
 const A = {
 
   chat:d=>startChat(d.k),
-  askFinal:()=>{ if(!C||UI.busy) return; C.msgs.push({role:"user",content:"C’est bon pour moi : donne-moi maintenant le bloc final (le bloc JSON de ta mission), sans texte après."}); setChat(C); send(); },
+  askFinal:()=>forceFinal(),
   resumeDiag:()=>{ closeSheet(); if(C && C.kind==="diag"){ openChat(); return; } if(placementDone()) return A.placementBack(); toast("La conversation de départ est terminée : fais tes tests, puis retourne au guide."); },
   saveName:()=>{ const n=($("#gname").value||"").trim(); setGuideName({name:n||null, asked:true}); const f=UI.afterName; UI.afterName=null; closeSheet(); render(); if(n) toast(`Ton guide s’appelle ${n}.`); if(f) f(); },
   skipName:()=>{ setGuideName({name:null, asked:true}); const f=UI.afterName; UI.afterName=null; closeSheet(); render(); if(f) f(); },
