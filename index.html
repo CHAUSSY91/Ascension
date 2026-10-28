@@ -236,7 +236,9 @@ Les tests de placement sont obligatoires : ne propose jamais de les sauter. Si o
    PROFONDEUR : quand une réponse est chargée d'émotion, relance UNE fois pour creuser, puis reviens au concret et au chemin. Ne transforme pas le diagnostic en séance de psychologie. Reformule ce que dit la personne, sans interpréter à sa place.
 5. PORTRAIT : quand tous les sujets sont abordés, fais un portrait : « Voici ce que je retiens de toi : … » (objectif, pourquoi, point de départ, temps disponible, matériel et moyens, contraintes, freins, première étape convenue). La personne valide ou corrige.
 6. Seulement ensuite, propose 1 à 3 tests de placement concrets et sans risque pour mesurer le niveau réel. La personne les fera PLUS TARD, seule, quand elle aura le temps : ne lui demande JAMAIS de les faire maintenant, ne lui demande pas ses résultats, ne construis aucun programme. Précise dans chaque test qu'on peut arrêter à tout moment et qu'on note ce qui a été tenu et le ressenti, jamais « réussi » ou « raté ». Type conseillé : seuil ou unique.
+   Dès que la personne valide le portrait (« oui », « ok », « ça me va »…), ne le répète JAMAIS : passe directement aux tests.
 7. Présente les tests en une phrase chacun maximum, jamais sous forme de fiche détaillée : tous les détails vont dans le bloc JSON. Dans le MÊME message, ajoute directement le bloc JSON.
+   Juste avant le bloc JSON, termine par une phrase d'encouragement de guide, courte et sincère, avec une image de montagne (ex. « Ton sac est prêt : on part du camp de base, un pas après l'autre. »).
 8. Ta mission s'arrête là. Termine UNIQUEMENT par ce bloc JSON, sans aucun texte après :
 {"etape":"placement","cap":"le pourquoi profond, en une phrase","sommet":"l'objectif final, court (8 mots max)","echeance":"ex. juin 2027","premiere_etape":"la première étape convenue, 8 mots max","disponibilite":"ex. 3 séances de 45 min, tôt le matin et le dimanche","materiel":"ex. montre cardio, chaussures de trail, parcours en forêt à 10 min","massif":"Massif …","tests":[ÉPREUVE, ...]}`;
 
@@ -248,7 +250,7 @@ La première conversation et les tests sont faits (ne recommence pas la conversa
 2. La première étape convenue au diagnostic devient l'objectif de la forêt, sauf si les tests montrent qu'il faut l'ajuster : dans ce cas, dis-le franchement et propose une formulation plus juste. Découpe ensuite l'objectif final (le sommet) en 3 sous-objectifs progressifs, un par étape : la forêt, puis les pentes, puis la falaise. Chaque sous-objectif est court (8 mots max), concret et mesurable, et mène au suivant (ex. « Tenir 10 km sous 160 bpm »). Tu gères le temps : donne à chaque étape une durée en jours, pour que la somme tienne jusqu'à l'échéance, avec un peu de marge.
 Vérifie le réalisme : compare le niveau mesuré aux tests avec l'exigence du sommet, et la durée disponible. Si c'est trop ambitieux, dis-le franchement et propose un sommet ou une échéance plus juste.
 3. Construis les épreuves de la FORÊT seulement (1 ou 2 sentiers, 3 à 6 épreuves par sentier selon la personne) : elles servent à atteindre l'objectif de la forêt.
-4. Présente un résumé lisible : le sommet, les 3 étapes avec leurs durées, puis les épreuves de la forêt. La personne valide ou demande UN ajustement.
+4. Présente un résumé lisible : le sommet, les 3 étapes avec leurs durées, puis les épreuves de la forêt, et termine par une phrase d'encouragement de guide, courte et sincère. La personne valide ou demande UN ajustement.
 5. Termine UNIQUEMENT par ce bloc JSON, sans aucun texte après :
 {"etape":"montagne","cap":"","sommet":"","echeance":"","massif":"Massif …","etapes":[{"zone":"foret","objectif":"","jours":42},{"zone":"pentes","objectif":"","jours":60},{"zone":"falaise","objectif":"","jours":60}],"sentiers":[{"nom":"","pourquoi":"","seuil_suffisance":"","epreuves":[ÉPREUVE, ...]}]}`;
 
@@ -990,7 +992,9 @@ function exchanges(){ return C ? C.msgs.filter(m=>m.role==="user"&&!m.hidden&&!m
 function payload(){
   const msgs=C.msgs.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({role:m.role,content:m.content}));
   let r=REMIND[stage()]; const last=msgs[msgs.length-1]; const n=exchanges();
-  if(stage()==="diag1"){
+  if(stage()==="diag1" && C.portraitAt!=null && n>C.portraitAt){
+    r="[IMPÉRATIF pour toi, la personne ne le voit pas : tu as déjà fait ton portrait et la personne vient de te répondre. Si elle le valide, NE RÉPÈTE PAS le portrait : présente directement 1 à 3 tests en une phrase chacun, une phrase d’encouragement de guide, puis termine par le bloc JSON de placement. Si elle corrige un point, intègre la correction en une phrase, puis fais de même.]";
+  } else if(stage()==="diag1"){
     if(n>=13) r="[IMPÉRATIF pour toi, la personne ne le voit pas : le temps est écoulé. CONCLUS MAINTENANT dans ce message : une phrase d’analyse, ton portrait en 4 à 6 lignes, puis 1 à 3 tests en une phrase chacun, et termine par le bloc JSON de placement. Aucune autre question.]";
     else if(n>=10) r="[Rappel pour toi : tu as maintenant assez d’éléments. Si un sujet obligatoire manque encore, pose UNE dernière question dessus ; sinon fais tout de suite ton portrait (« Voici ce que je retiens de toi : … ») et demande à la personne de le valider. Dès qu’elle valide, présente les tests et termine par le bloc JSON de placement.]";
   }
@@ -1002,9 +1006,12 @@ async function send(){
   if(!C || UI.busy) return;
   UI.busy=true; renderChat();
   try{
+    const before = stage()==="diag1" && C.portraitAt!=null && exchanges()>C.portraitAt;
     const text=await callGuide(payload(), C.system);
     const res=detect(C.kind,text);
     C.msgs.push({role:"assistant",content:text,result:res||undefined});
+    if(!res && stage()==="diag1" && C.portraitAt==null && /voici ce que je retiens/i.test(text)) C.portraitAt=exchanges();
+    if(!res && before){ UI.busy=false; setChat(C); return forceFinal(); }
   }catch(e){ C.msgs.push({role:"error",content:e.message}); }
   UI.busy=false; setChat(C); renderChat();
 }
@@ -1020,7 +1027,8 @@ async function forceFinal(){
     const j=extractJSON(out);
     const res=detect(C.kind, JSON.stringify(j));
     if(!res) throw new Error("Le guide n’a pas réussi à préparer la suite. Réponds encore à une ou deux de ses questions, puis réessaie.");
-    C.msgs.push({role:"assistant",content:"Voici ce que j’ai retenu de notre échange.\n"+JSON.stringify(j),result:res});
+    const enc = st==="diag1" ? "Ton sac est prêt. Fais ces tests à ton rythme : ils nous diront d’où tu pars, et on tracera ensemble ton premier sentier." : st==="diag2" ? "Ta montagne est tracée. Un pas après l’autre, on y va ensemble." : "C’est noté. On reprend la marche, pas à pas.";
+    C.msgs.push({role:"assistant",content:enc+"\n"+JSON.stringify(j),result:res});
   }catch(e){ C.msgs.push({role:"error",content:e.message}); }
   UI.busy=false; setChat(C); renderChat();
 }
@@ -1164,9 +1172,9 @@ const A = {
     const stamp=new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
     const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Ascension//FR","BEGIN:VEVENT",`UID:${uid()}@ascension`,`DTSTAMP:${stamp}`,`DTSTART:${d}T${pad(h)}${pad(m)}00`,"DURATION:PT10M","RRULE:FREQ=DAILY","SUMMARY:Ascension : coche ta journée et choisis l’épreuve de demain","BEGIN:VALARM","TRIGGER:PT0M","ACTION:DISPLAY","DESCRIPTION:Ascension","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
     download("rappel-ascension.ics", ics, "text/calendar"); },
-  export:()=>download(`ascension-${today()}.json`, JSON.stringify(S,null,1), "application/json"),
+  export:()=>download(`ascension-${today()}.json`, JSON.stringify({...S, _chat:C||null, _guide:guideName()||null},null,1), "application/json"),
   import:()=>{ const i=document.createElement("input"); i.type="file"; i.accept="application/json,.json";
-    i.onchange=()=>{ const f=i.files[0]; if(!f) return; f.text().then(t=>{ try{ const j=JSON.parse(t); if(!j.massif) throw 0; S=j; save(); UI.tab="montagne"; render(); toast("Sauvegarde importée."); }catch(e){ toast("Ce fichier n’est pas une sauvegarde Ascension."); } }); };
+    i.onchange=()=>{ const f=i.files[0]; if(!f) return; f.text().then(t=>{ try{ const j=JSON.parse(t); if(!j.massif) throw 0; const ch=j._chat, gd=j._guide; delete j._chat; delete j._guide; S=j; C=ch||null; setChat(C); if(gd) setGuideName(gd); save(); UI.tab="montagne"; render(); toast("Sauvegarde importée."); }catch(e){ toast("Ce fichier n’est pas une sauvegarde Ascension."); } }); };
     i.click(); },
   reset:()=>ask("Tout effacer ? Exporte d’abord une sauvegarde si tu veux garder ton historique.","Tout effacer",()=>{ S=null; try{ localStorage.removeItem(KEY); }catch(e){} mem=null; C=null; setChat(null); UI.tab="montagne"; render(); })
 };
