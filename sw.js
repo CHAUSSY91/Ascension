@@ -1,4 +1,4 @@
-const CACHE = "ascension-v11";
+const CACHE = "ascension-v12";
 const FILES = ["./", "index.html", "manifest.webmanifest", "montagne.jpg",
   "camp-0.jpg", "camp-1.jpg", "camp-2.jpg", "camp-3.jpg", "camp-4.jpg",
   "icon-192.png", "icon-512.png", "apple-touch-icon.png"];

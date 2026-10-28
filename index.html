@@ -59,7 +59,7 @@ p{margin:0}
 .map svg{display:block;width:100%;height:auto}
 .map-head{position:absolute;left:0;right:0;top:0;padding:22px 20px 0;display:flex;flex-direction:column;gap:6px;text-shadow:0 1px 12px rgba(5,8,22,.9);pointer-events:none}
 .map-head .cap{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--gold-soft)}
-.map-head .sommet-t{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--gold-soft);opacity:.85;margin:0}
+.map-head .lieu{font-family:var(--serif);font-size:22px;font-weight:500;color:var(--gold);margin:0;letter-spacing:.01em}
 .map-head .meta{font-size:13px;color:#D9DCE6}
 .chip{cursor:pointer}
 .chip rect{transition:stroke .2s}
@@ -643,12 +643,29 @@ ${getKey()?.key?`<button type="button" class="btn wide" data-a="chat" data-k="di
 <button type="button" class="btn ghost wide" data-a="import">J’ai une sauvegarde</button>
 </div>`;
 }
+const PREP=["dans la forêt","dans les pentes","sur la falaise"];
+function progressLine(day){
+  if(S.sommet) return `Jour ${day} : sommet atteint, profite de la vue.`;
+  if(S.phase==="placement"){
+    const n=S.placement.filter(t=>t.etat!=="validee").length;
+    if(!n) return `Jour ${day} : tests terminés, ton guide t’attend.`;
+    return day<=1 ? `Jour ${day} : tout commence ici, ${n} test${n>1?"s":""} à faire.` : `Jour ${day} : encore ${n} test${n>1?"s":""} avant la forêt.`;
+  }
+  const eps=active().flatMap(s=>zoneEps(s)); const done=eps.filter(e=>e.etat==="validee").length;
+  const pct = eps.length ? done/eps.length : 0;
+  const left = Math.max(0, S.massif.duree - diff(S.zoneDebut,today()));
+  const feu = left ? `, feu de camp dans ${left} j` : "";
+  const z=S.zone;
+  if(pct>=1) return `Jour ${day} : le feu de camp est en vue.`;
+  if(pct===0) return `Jour ${day} : premiers pas ${PREP[z]}${feu}.`;
+  if(pct<0.5) return `Jour ${day} : tu prends ton rythme ${PREP[z]}${feu}.`;
+  return `Jour ${day} : plus de la moitié du chemin vers le feu${feu}.`;
+}
 function vMontagne(){
   const day=diff(S.massif.debut,today())+1;
-  const top = S.massif.sommet || S.massif.cap;
-  const cur = S.phase==="placement" ? "Tes tests de placement" : S.sommet ? "Sommet atteint" : (zoneObj(S.zone) || ZONE_T[S.zone]);
-  const where = S.phase==="placement" ? "Camp de base" : S.sommet ? "Le sommet" : ZONE_T[S.zone];
-  return `<div class="map"><div class="map-head"><p class="sommet-t">Ton sommet : ${esc(top)}${S.massif.echeance?`, ${esc(S.massif.echeance)}`:""}</p><p class="meta">${where}, jour ${day} de l’ascension</p><h1 style="font-size:27px">${esc(cur)}</h1></div>${mapSVG()}</div>${actionBar()}<div style="height:16px"></div>`;
+  const lieu = S.sommet ? "Le sommet" : S.phase==="placement" ? "Camp de base" : ZONE_T[S.zone].replace(/^(La |Les |Le )/,"").replace(/^./,c=>c.toUpperCase());
+  const titre = S.sommet ? (S.massif.sommet||"Sommet atteint") : S.phase==="placement" ? "Passe tes tests avant d’attaquer la forêt" : (zoneObj(S.zone) || "Avance pas à pas vers le feu de camp");
+  return `<div class="map"><div class="map-head"><p class="lieu">${esc(lieu)}</p><h1 style="font-size:27px">${esc(titre)}</h1><p class="meta">${esc(progressLine(day))}</p></div>${mapSVG()}</div>${actionBar()}<div style="height:16px"></div>`;
 }
 function epCard(s,e,isPlanned){
   const p=prog(e); let body="", actions="";
@@ -781,7 +798,7 @@ function sheetZone(id){
   const z=Number(id);
   if(z===3){
     return openSheet(head("Le sommet",S.sommet?"Atteint":(S.massif.echeance?`Échéance : ${S.massif.echeance}`:"Au bout des trois étapes"))+scene(4,"Drapeau français au sommet sous la Voie lactée")+
-      `${S.massif.sommet?`<h3>${esc(S.massif.sommet)}</h3>`:""}<p class="why">${esc(S.massif.cap)}</p>${(S.massif.etapes||[]).filter(e=>e?.objectif).length?`<div class="list">${S.massif.etapes.map((e,i)=>e?.objectif?`<div class="ep"><span class="m ${i<S.zone||S.sommet?"validee":i===S.zone&&S.phase!=="placement"?"active":"verrouillee"}"></span><div><strong style="font-weight:500">${ZONE_T[i]} : ${esc(e.objectif)}</strong><br><span class="muted" style="font-size:13.5px">${e.jours} jours prévus</span></div></div>`:"").join("")}</div>`:""}<p>${S.sommet?esc(S.journal.filter(j=>j.type==="sommet").pop()?.texte||"Tu y es."):"Au sommet, ton guide fait le bilan complet du massif : ce que tu as acquis, ce qui tient tout seul, ce qui demande encore de l’entretien. Puis tu choisis ton prochain massif, en lien ou non avec celui-ci."}</p>`);
+      `<p class="trail">Ton objectif final</p><h3>${esc(S.massif.sommet||S.massif.cap)}</h3>${S.massif.sommet&&S.massif.cap?`<p class="why">${esc(S.massif.cap)}</p>`:""}${(S.massif.etapes||[]).some(e=>e?.objectif)?`<p class="trail">Les étapes pour y arriver</p>`:""}${(S.massif.etapes||[]).filter(e=>e?.objectif).length?`<div class="list">${S.massif.etapes.map((e,i)=>e?.objectif?`<div class="ep"><span class="m ${i<S.zone||S.sommet?"validee":i===S.zone&&S.phase!=="placement"?"active":"verrouillee"}"></span><div><strong style="font-weight:500">${ZONE_T[i]} : ${esc(e.objectif)}</strong><br><span class="muted" style="font-size:13.5px">${e.jours} jours prévus</span></div></div>`:"").join("")}</div>`:""}<p>${S.sommet?esc(S.journal.filter(j=>j.type==="sommet").pop()?.texte||"Tu y es."):"Au sommet, ton guide fait le bilan complet du massif : ce que tu as acquis, ce qui tient tout seul, ce qui demande encore de l’entretien. Puis tu choisis ton prochain massif, en lien ou non avec celui-ci."}</p>`);
   }
   const st = z<S.zone||S.sommet ? "Passée" : z===S.zone && S.phase!=="placement" ? "En cours" : "À venir";
   const zo = zoneObj(z), zd = S.massif.etapes?.[z]?.jours;
