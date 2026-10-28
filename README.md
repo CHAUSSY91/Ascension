@@ -23,7 +23,15 @@ Note : GitHub Pages en plan gratuit publie le site même si le dépôt est priv�
 
 Après une modification, change `CACHE = "ascension-v1"` en `v2`, `v3`… dans `sw.js` pour forcer les téléphones à recharger les fichiers.
 
-## Guide intégré avec Mistral (facultatif)
+## Guide intégré (facultatif)
+
+### Avec Gemini (gratuit, recommandé)
+1. Va sur **aistudio.google.com**, connecte-toi avec ton compte Google, touche **Get API key** puis **Create API key**.
+2. Dans Ascension : **Brancher mon guide** → modèle **Gemini Flash** → colle la clé → **Enregistrer et tester**. Pas de relais nécessaire.
+
+Sur l’offre gratuite, Google peut utiliser tes échanges pour améliorer ses modèles.
+
+### Avec Mistral (via relais)
 
 Mistral n’accepte pas les appels directs depuis une page web. L’app passe donc par un petit relais gratuit chez Cloudflare, qui transmet la demande à Mistral et renvoie la réponse. Il ne stocke rien.
 
