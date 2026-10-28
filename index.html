@@ -205,9 +205,10 @@ const DIAG = CORE + `
 
 MISSION : LA PREMIÈRE CONVERSATION ET LES TESTS DE PLACEMENT
 1. Ouvre par : « Une montagne se grimpe pas à pas. Pas de raccourci, pas de sprint. » Présente-toi en deux phrases, puis dis une seule fois, simplement : « Je ne suis pas médecin : si un jour quelque chose te semble anormal dans ton corps, consulte. » Ne le répète plus ensuite.
-2. Conversation de 8 à 12 questions, une à la fois : la compétence visée et son pourquoi ; le niveau ressenti ; le temps disponible par jour, le matériel, le lieu, la vie de famille ; blessures ou douleurs actuelles ; motivation, doutes, freins ; le seuil de suffisance (ce qui suffirait vraiment).
+2. Ta toute première question porte TOUJOURS sur l'objectif : « Quelle compétence ou quel objectif veux-tu atteindre, et pourquoi c'est important pour toi ? ». Puis conversation de 8 à 12 questions au total, une à la fois : la compétence visée et son pourquoi ; le niveau ressenti ; le temps disponible par jour, le matériel, le lieu, la vie de famille ; blessures ou douleurs actuelles ; motivation, doutes, freins ; le seuil de suffisance (ce qui suffirait vraiment).
 3. Puis propose 1 à 3 tests de placement concrets et sans risque pour mesurer le niveau réel. La personne les fera PLUS TARD, seule, quand elle aura le temps : ne lui demande JAMAIS de les faire maintenant, ne lui demande pas ses résultats, ne construis aucun programme. Précise dans chaque test qu'on peut arrêter à tout moment et qu'on note ce qui a été tenu et le ressenti, jamais « réussi » ou « raté ». Type conseillé : seuil ou unique.
-4. Ta mission s'arrête là. Termine UNIQUEMENT par ce bloc JSON, sans aucun texte après :
+4. Présente les tests en une phrase chacun maximum, jamais sous forme de fiche détaillée : tous les détails vont dans le bloc JSON. Dans le MÊME message, ajoute directement le bloc JSON.
+5. Ta mission s'arrête là. Termine UNIQUEMENT par ce bloc JSON, sans aucun texte après :
 {"etape":"placement","cap":"","massif":"Massif …","tests":[ÉPREUVE, ...]}`;
 
 const DIAG2 = CORE + `
@@ -267,6 +268,22 @@ function download(name, content, type){
   a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500);
 }
+const SCHEMA={
+  diag:'soit {"etape":"placement","cap":"","massif":"","tests":[ÉPREUVE]} si le texte décrit des tests de placement, soit {"etape":"montagne","cap":"","massif":"","duree_zone_jours":21,"intentions":{"pentes":"","falaise":""},"sentiers":[{"nom":"","pourquoi":"","seuil_suffisance":"","epreuves":[ÉPREUVE]}]} s’il décrit des sentiers et des épreuves',
+  feu:'{"bilan":"","voie":"sentier","duree_zone_jours":21,"intentions":{"falaise":""},"sentiers":[{"nom":"","decision":"continuer","parent":"","pourquoi":"","seuil_suffisance":"","epreuves":[ÉPREUVE],"fond":[{"titre":"","contenu":[]}]}]} (ou, pour un sommet : {"bilan":"","entretien":[],"prochain_massif":""})',
+  bivouac:'{"bilan":"","fond":[{"sentier":"","titre":"","contenu":[]}],"aide":[{"sentier":"","conseil":""}]}',
+  halte:'{"bilan":"","duree_zone_jours":21,"ajustements":[{"sentier":"","epreuves":[ÉPREUVE]}]}'
+};
+const EP_FMT='ÉPREUVE = {"titre":"","type":"frequence|retrait|seuil|unique|savoir","critere":"","cible":5,"unite":"","mesure":"","fenetre_jours":7,"contenu":[""],"difficulte":1,"pourquoi":"","securite":""}';
+async function smartParse(txt, kind){
+  try{ return extractJSON(txt); }
+  catch(e){
+    if(!getKey()?.key || !String(txt||"").trim()) throw new Error("Je n’ai pas trouvé les informations. Colle la toute dernière réponse du guide, en entier.");
+    const out = await callGuide([{role:"user",content:`Voici un texte rédigé par un guide de progression. Convertis-le fidèlement en JSON, sans rien inventer d’important, au format : ${SCHEMA[kind]||SCHEMA.diag}. ${EP_FMT}. Pour une épreuve « seuil », la mesure doit être une valeur où plus = mieux (ex. minutes tenues). Réponds UNIQUEMENT avec le JSON.\n\nTEXTE :\n${txt}`}], "Tu convertis du texte en JSON strictement valide. Tu ne réponds que par le JSON.", 4000);
+    return extractJSON(out);
+  }
+}
+async function busyBtn(sel, fn){ const b=document.querySelector(sel); const t=b?.textContent; if(b){ b.disabled=true; b.textContent="Lecture en cours…"; } try{ await fn(); } finally{ if(b && document.body.contains(b)){ b.disabled=false; b.textContent=t; } } }
 function extractJSON(txt){
   const t = String(txt||"").replace(/```(json)?/gi,"");
   const a = t.indexOf("{"), b = t.lastIndexOf("}");
@@ -556,7 +573,7 @@ function mapSVG(){
   });
   if(!virgin) campLab.push(lab(160,200, S.sommet?"Sommet atteint":"Sommet",{serif:true,w:500,s:13,f:S.sommet?"#FFC870":"#fff"}));
   const st=z=> z<Z||S.sommet ? ["Passée","done"] : z===Z && S.phase!=="placement" ? ["En cours","now"] : ["À venir","lock"];
-  const chips = chip("base",214,700,"Camp de base",S.phase==="placement"?"Placement en cours":"Ton diagnostic",S.phase==="placement"?"now":"done")
+  const chips = chip("base",16,712,"Camp de base",S.phase==="placement"?"Placement en cours":"Ton diagnostic",S.phase==="placement"?"now":"done")
     + chip("0",16,560,"La forêt",st(0)[0],st(0)[1]) + chip("1",256,470,"Les pentes",st(1)[0],st(1)[1])
     + chip("2",236,345,"La falaise",st(2)[0],st(2)[1]) + chip("3",16,250,"Le sommet",S.sommet?"Atteint":"À venir",S.sommet?"done":"lock");
   return `<svg viewBox="0 0 390 867" role="img" aria-label="Carte de ta montagne">
@@ -597,15 +614,8 @@ function actionBar(){
 function vOnboard(){
   return `<div class="hero"><div class="in"><h1>Une montagne se grimpe pas à pas.</h1><p class="muted">Pas de raccourci, pas de sprint. Choisis une compétence, ton guide construit la montagne avec toi, et tu la gravis une épreuve à la fois.</p></div></div>
 <div class="page">
-${getKey()?.key?`<button type="button" class="btn wide" data-a="chat" data-k="diag">${C?.kind==="diag"?"Reprendre le diagnostic avec mon guide":"Commencer avec mon guide"}</button>${C?`<button type="button" class="btn ghost wide" data-a="resetAll">Recommencer le diagnostic à zéro</button>`:""}<p class="muted" style="text-align:center;font-size:13.5px">ou, sans passer par l’app :</p>`:`<button type="button" class="btn line wide" data-a="keySheet">Brancher mon guide dans l’app</button><p class="muted" style="text-align:center;font-size:13.5px">ou, sans clé, par copier-coller :</p>`}
-<div class="step"><span class="n">1</span><div><h3>Copie le texte du guide</h3><p class="muted">Il contient tout ce que ton guide doit savoir.</p></div></div>
-<button type="button" class="btn ghost wide" data-a="copyDiag">Copier le texte du guide</button>
-<div class="step"><span class="n">2</span><div><h3>Colle-le dans Claude ou Mistral</h3><p class="muted">Réponds à ses questions. À la fin, il te donne tes tests de placement.</p></div></div>
-<div class="step"><span class="n">3</span><div><h3>Colle ici sa dernière réponse</h3><p class="muted">Le bloc entre accolades qui termine la conversation : tes tests de placement apparaîtront sur la carte.</p></div></div>
-<label for="paste" class="muted" style="font-size:13.5px">Réponse du guide</label>
-<textarea id="paste" placeholder='{"cap": …}'></textarea>
-<p class="err" id="perr" role="alert"></p>
-<button type="button" class="btn wide" data-a="build">Construire ma montagne</button>
+${getKey()?.key?`<button type="button" class="btn wide" data-a="chat" data-k="diag">${C?.kind==="diag"?"Reprendre le diagnostic avec mon guide":"Commencer avec mon guide"}</button>${C?`<button type="button" class="btn ghost wide" data-a="resetAll">Recommencer le diagnostic à zéro</button>`:""}`:`<button type="button" class="btn wide" data-a="keySheet">Brancher mon guide dans l’app</button>`}
+<button type="button" class="btn ghost wide" data-a="secours">Mode secours, sans guide intégré</button>
 <button type="button" class="btn ghost wide" data-a="import">J’ai une sauvegarde</button>
 </div>`;
 }
@@ -701,6 +711,7 @@ function vMoi(){
   return `<div class="page"><div><h1>${esc(S.massif.nom)}</h1><p class="why">${esc(S.massif.cap)}</p></div>
 <p>${done} épreuve${done>1?"s":""} validée${done>1?"s":""} depuis le ${fmt(S.massif.debut)}.</p>
 <section class="card"><h3>Ton guide${guideName()?.name?`, ${esc(guideName().name)}`:""}</h3><button type="button" class="btn ghost small" data-a="nameSheet" style="align-self:flex-start">${guideName()?.name?"Changer son nom":"Lui donner un nom"}</button><p class="muted">${getKey()?.key?`Branché dans l’app (${esc((MODELS.find(m=>m[0]===getKey().model)||MODELS[0])[1])}).`:"Pas encore branché : tu passes par le copier-coller."}</p><button type="button" class="btn ${getKey()?.key?"ghost":""}" data-a="keySheet">${getKey()?.key?"Modifier":"Brancher mon guide"}</button></section>
+<section class="card"><h3>Mode secours</h3><p class="muted">Si ton guide intégré ne répond plus : diagnostic par copier-coller avec n’importe quelle IA.</p><button type="button" class="btn ghost" data-a="secours" style="align-self:flex-start">Ouvrir le mode secours</button></section>
 <section class="card"><h3>Rappel du soir</h3><p class="muted">Ajoute un rappel quotidien à ton agenda pour cocher ta journée et choisir l’épreuve de demain.</p>
 <label for="rt" class="muted" style="font-size:13.5px">Heure du rappel</label><input type="time" id="rt" value="21:30"><button type="button" class="btn" data-a="ics">Ajouter à mon agenda</button></section>
 <section class="card"><h3>Sauvegarde</h3><p class="muted">Tes données restent sur ce téléphone. Exporte-les de temps en temps pour ne rien perdre.</p>
@@ -769,7 +780,7 @@ function sheetGuide(kind){
     (getKey()?.key && kind!=="placement"?`<button type="button" class="btn wide" data-a="chat" data-k="${kind}">${C?.kind===kind?"Reprendre avec ton guide":"Parler à ton guide"}</button><p class="muted" style="font-size:13.5px">Ou sans passer par l’app :</p>`:"")+
     `<div class="step"><span class="n">1</span><p>Copie le texte et colle-le dans une nouvelle conversation avec ton guide.</p></div>
     <button type="button" class="btn wide" data-a="copyPrompt">Copier le texte pour ton guide</button>
-    <div class="step"><span class="n">2</span><p>Prends le temps de lui répondre, puis colle ici sa dernière réponse.</p></div>
+    <div class="step"><span class="n">2</span><p>Prends le temps de lui répondre, puis copie sa dernière réponse telle quelle et colle-la ici.</p></div>
     <label for="gpaste" class="muted" style="font-size:13.5px">Réponse du guide</label>
     <textarea id="gpaste" placeholder='{"bilan": …}'></textarea><p class="err" id="gerr" role="alert"></p>
     <button type="button" class="btn wide" data-a="${conf.apply}">${conf.btn}</button>
@@ -804,6 +815,8 @@ function appRules(){ return `
 CADRE DE L'APP
 - Tu parles dans l'application Ascension, lue sur un téléphone : réponses courtes (2 à 6 phrases), sauf le résumé final.
 - Nous sommes le ${new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}.
+- Tu ne connais pas le genre de la personne : utilise des formulations neutres tant qu'elle ne l'a pas indiqué.
+- Si la personne te demande « le bloc final », donne immédiatement le bloc JSON demandé par ta mission, sans autre texte.
 - Écris en texte simple : pas de titres, pas de tableaux. Le gras est autorisé avec parcimonie.
 - L'app lit automatiquement ton bloc JSON final et l'applique à la montagne : donne-le en entier, dans un seul message, seulement quand la personne a validé.`; }
 function sceneFor(kind){ return kind==="diag"?0:Math.min((S?.zone??0)+1,4); }
@@ -901,9 +914,22 @@ function renderChat(){
   }).join("");
   $("#chat").innerHTML=`<div class="chat-head"><img src="camp-${sceneFor(C.kind)}.jpg" alt=""><div class="t"><h3>${CTITLE[C.kind]}</h3><p style="font-family:var(--serif);font-style:italic;color:var(--gold-soft);font-size:14px;margin:0">${esc(guideName()?.name||"")}</p><p class="muted" style="font-size:13px">${esc(guideName()?.name?"Ton guide de montagne":"Guide de montagne")}</p></div><button type="button" class="x" data-a="closeChat" aria-label="Fermer la conversation"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
 <div class="msgs" id="msgs" aria-live="polite">${items}${UI.busy?`<div class="typing" id="typing" aria-label="Le guide réfléchit"><i></i><i></i><i></i></div><div class="msg guide" id="live" hidden></div>`:""}</div>
+${!UI.busy && !C.msgs.some(m=>m.result && !m.applied) && C.msgs.filter(m=>m.role==="assistant").length>=3 ? `<div style="padding:0 12px 4px;display:flex;justify-content:flex-end"><button type="button" class="btn ghost small" data-a="askFinal">${C.kind==="diag"?"Obtenir mes tests / ma montagne":"Obtenir le bilan final"}</button></div>`:""}
 <div class="composer"><textarea id="cmsg" placeholder="Ta réponse" aria-label="Ta réponse" ${UI.busy?"disabled":""}>${esc(draft)}</textarea><button type="button" class="btn" data-a="sendMsg" aria-label="Envoyer" ${UI.busy?"disabled":""}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>`;
   const m=$("#msgs"); m.scrollTop=m.scrollHeight;
   const ta=$("#cmsg"); ta.addEventListener("input",()=>{ draft=ta.value; ta.style.height="auto"; ta.style.height=Math.min(ta.scrollHeight,140)+"px"; });
+}
+function sheetSecours(){
+  openSheet(head("Mode secours","Sans guide intégré")+
+  `<p class="muted" style="font-size:14px">À utiliser si ton guide intégré ne répond plus (clé, crédit, panne).</p>
+  <div class="step"><span class="n">1</span><p>Copie le texte du guide.</p></div>
+  <button type="button" class="btn ghost wide" data-a="copyDiag">Copier le texte du guide</button>
+  <div class="step"><span class="n">2</span><p>Colle-le dans une conversation avec Claude, Mistral ou Gemini, et réponds à ses questions.</p></div>
+  <div class="step"><span class="n">3</span><p>Copie sa dernière réponse, telle quelle, et colle-la ici. Pas besoin de chercher un bloc particulier.</p></div>
+  <label for="paste" class="muted" style="font-size:13.5px">Réponse du guide</label>
+  <textarea id="paste" placeholder="Colle ici sa dernière réponse"></textarea>
+  <p class="err" id="perr" role="alert"></p>
+  <button type="button" class="btn wide" data-a="build">Construire</button>`);
 }
 function sheetName(after){
   UI.afterName=after||null;
@@ -941,6 +967,7 @@ function afterValidate(s){
 const A = {
 
   chat:d=>startChat(d.k),
+  askFinal:()=>{ if(!C||UI.busy) return; C.msgs.push({role:"user",content:"C’est bon pour moi : donne-moi maintenant le bloc final (le bloc JSON de ta mission), sans texte après."}); setChat(C); send(); },
   resumeDiag:()=>{ closeSheet(); if(C && C.kind==="diag"){ openChat(); return; } if(placementDone()) return A.placementBack(); toast("La conversation de départ est terminée : fais tes tests, puis retourne au guide."); },
   saveName:()=>{ const n=($("#gname").value||"").trim(); setGuideName({name:n||null, asked:true}); const f=UI.afterName; UI.afterName=null; closeSheet(); render(); if(n) toast(`Ton guide s’appelle ${n}.`); if(f) f(); },
   skipName:()=>{ setGuideName({name:null, asked:true}); const f=UI.afterName; UI.afterName=null; closeSheet(); render(); if(f) f(); },
@@ -955,7 +982,7 @@ const A = {
     if(getKey()?.key && C && C.kind==="diag"){ C.system=withName(promptPlacementBack())+appRules(); C.msgs.push({role:"user",content:placementMessage()}); setChat(C); openChat(); send(); return; }
     if(getKey()?.key){ C={kind:"diag", system:withName(promptPlacementBack())+appRules(), msgs:[{role:"user",content:"Je reviens avec mes résultats de placement.",hidden:true}], started:today()}; setChat(C); openChat(); send(); return; }
     sheetGuide("placement"); },
-  applyPlacementBack:()=>{ try{ const j=extractJSON($("#gpaste").value); buildFromDiag(j); save(); closeSheet(); UI.tab="montagne"; render(); requestAnimationFrame(scrollToZone); toast("Ta montagne est prête. Premier pas en forêt."); }catch(e){ $("#gerr").textContent=e.message; } },
+  applyPlacementBack:()=>busyBtn('[data-a="applyPlacementBack"]', async()=>{ try{ const j=await smartParse($("#gpaste").value,"diag"); buildFromDiag(j); save(); closeSheet(); UI.tab="montagne"; render(); requestAnimationFrame(scrollToZone); toast("Ta montagne est prête. Premier pas en forêt."); }catch(e){ $("#gerr").textContent=e.message; } }),
   closeChat:()=>closeChat(),
   sendMsg:()=>{ const t=($("#cmsg").value||"").trim(); if(!t||UI.busy) return; C.msgs.push({role:"user",content:t}); draft=""; setChat(C); send(); },
   retry:()=>{ C.msgs=C.msgs.filter(m=>m.role!=="error"); send(); },
@@ -984,7 +1011,8 @@ const A = {
   askYes:()=>{ const f=UI.pending; UI.pending=null; closeSheet(); if(f) f(); },
   copyDiag:async()=>toast(await copy(withName(DIAG))?"Texte du guide copié. Colle-le dans Claude ou Mistral.":"La copie a échoué : sélectionne le texte manuellement."),
   copyPrompt:async()=>toast(await copy(UI.prompt)?"Texte copié. Colle-le dans une nouvelle conversation.":"La copie a échoué."),
-  build:()=>{ try{ const j=extractJSON($("#paste").value); if(j.tests && !j.sentiers){ buildPlacement(j); save(); UI.tab="montagne"; render(); requestAnimationFrame(scrollToZone); toast("Tes tests sont sur la carte, au camp de base."); return; } buildFromDiag(j); save(); UI.tab="montagne"; render(); requestAnimationFrame(scrollToZone); toast("Ta montagne est prête. Premier pas en forêt."); }catch(e){ $("#perr").textContent=e.message; } },
+  secours:()=>sheetSecours(),
+  build:()=>busyBtn('[data-a="build"]', async()=>{ try{ const j=await smartParse($("#paste").value,"diag"); closeSheet(); if(j.tests && !j.sentiers){ buildPlacement(j); save(); UI.tab="montagne"; render(); requestAnimationFrame(scrollToZone); toast("Tes tests sont sur la carte, au camp de base."); return; } buildFromDiag(j); save(); UI.tab="montagne"; render(); requestAnimationFrame(scrollToZone); toast("Ta montagne est prête. Premier pas en forêt."); }catch(e){ $("#perr").textContent=e.message; } }),
   zone:d=>sheetZone(d.z),
   open:d=>sheetGuide(d.k),
   log:d=>{ const [s,e]=getSE(d); const t=today();
@@ -1005,9 +1033,9 @@ const A = {
     afterValidate(s); },
   demain:d=>{ S.demain={date:addDays(today(),1), id:d.e}; save(); render(); toast("C’est décidé pour demain."); },
   fond:d=>{ const s=S.sentiers.find(x=>x.id===d.s); const k=today()+":"+d.i; s.fondLog[k]=!s.fondLog[k]; touch(); save(); render(); },
-  applyFeu:()=>{ try{ const wasZ=S.zone; applyFeu(extractJSON($("#gpaste").value)); save(); closeSheet(); UI.tab="montagne"; render(); requestAnimationFrame(scrollToZone); toast(S.sommet?"Sommet atteint. Bravo.":`Bienvenue dans ${ZONES[wasZ+1]}.`); }catch(e){ $("#gerr").textContent=e.message; } },
-  applyBivouac:()=>{ try{ applyBivouac(extractJSON($("#gpaste").value)); save(); closeSheet(); render(); toast("Bivouac enregistré."); }catch(e){ $("#gerr").textContent=e.message; } },
-  applyHalte:()=>{ try{ applyHalte(extractJSON($("#gpaste").value)); save(); closeSheet(); render(); toast("C’est reparti, pas à pas."); }catch(e){ $("#gerr").textContent=e.message; } },
+  applyFeu:()=>busyBtn('[data-a="applyFeu"]', async()=>{ try{ const wasZ=S.zone; applyFeu(await smartParse($("#gpaste").value,"feu")); save(); closeSheet(); UI.tab="montagne"; render(); requestAnimationFrame(scrollToZone); toast(S.sommet?"Sommet atteint. Bravo.":`Bienvenue dans ${ZONES[wasZ+1]}.`); }catch(e){ $("#gerr").textContent=e.message; } }),
+  applyBivouac:()=>busyBtn('[data-a="applyBivouac"]', async()=>{ try{ applyBivouac(await smartParse($("#gpaste").value,"bivouac")); save(); closeSheet(); render(); toast("Bivouac enregistré."); }catch(e){ $("#gerr").textContent=e.message; } }),
+  applyHalte:()=>busyBtn('[data-a="applyHalte"]', async()=>{ try{ applyHalte(await smartParse($("#gpaste").value,"halte")); save(); closeSheet(); render(); toast("C’est reparti, pas à pas."); }catch(e){ $("#gerr").textContent=e.message; } }),
   skipHalte:()=>{ S.journal.push({date:today(),type:"halte",texte:"Reprise sans faire le point."}); S.halte=null; touch(); save(); closeSheet(); render(); },
   newMassif:()=>ask("Archiver ce massif et en commencer un nouveau ?","Nouveau massif",()=>{ const arch=(S.archives||[]).concat([{massif:S.massif.nom,cap:S.massif.cap,fin:today()}]); S={archives:arch}; save(); render(); }),
   ics:()=>{ const [h,m]=($("#rt").value||"21:30").split(":"); const d=today().replace(/-/g,"");
