@@ -648,6 +648,7 @@ function vOnboard(){
   return `<div class="hero"><div class="in"><h1>Une montagne se grimpe pas à pas.</h1><p class="muted">Pas de raccourci, pas de sprint. Choisis une compétence, ton guide construit la montagne avec toi, et tu la gravis une épreuve à la fois.</p></div></div>
 <div class="page">
 ${getKey()?.key?`<button type="button" class="btn wide" data-a="chat" data-k="diag">${C?.kind==="diag"?"Reprendre le diagnostic avec mon guide":"Commencer avec mon guide"}</button>${C?`<button type="button" class="btn ghost wide" data-a="resetAll">Recommencer le diagnostic à zéro</button>`:""}`:`<button type="button" class="btn wide" data-a="keySheet">Brancher mon guide dans l’app</button>`}
+${getKey()?.key?`<button type="button" class="btn ghost wide" data-a="keySheet">Réglages du guide (modèle, clé)</button>`:""}
 <button type="button" class="btn ghost wide" data-a="secours">Mode secours, sans guide intégré</button>
 <button type="button" class="btn ghost wide" data-a="import">J’ai une sauvegarde</button>
 </div>`;
