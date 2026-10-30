@@ -1036,97 +1036,6 @@ function vJournal(){
 ${j.epreuve?`<strong style="font-family:var(--serif);font-weight:500;font-size:17px">${esc(j.epreuve)}</strong>`:""}
 ${j.note?`<span class="muted">Ressenti : ${FEEL[j.note-1]}</span>`:""}${j.texte?`<p>${esc(j.texte)}</p>`:""}</div>`).join("")}</div></div>`;
 }
-/* ---------- export du profil (texte brut, lecture seule) ---------- */
-function profilTexte(){
-  const R="(rien pour l'instant)", L=[], t=today();
-  const plain=x=>String(x??"").replace(/\*\*(.+?)\*\*/g,"$1").replace(/(^|[^*])\*(?!\s)([^*\n]+?)\*(?!\*)/g,"$1$2").replace(/^#{1,6}\s*/gm,"").trim();
-  const H=x=>{ L.push("",x.toUpperCase(),"=".repeat(x.length)); };
-  const h=x=>{ L.push("",x.toUpperCase()); };
-  const li=(x,n=0)=>L.push(`${"  ".repeat(n)}- ${x}`);
-  const list=(arr,f,n=0)=>{ if(arr&&arr.length) arr.forEach(x=>li(f(x),n)); else li(R,n); };
-  const dLong=s=>s?parse(s).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}):"?";
-  const M=S.massif;
-  L.push(`ASCENSION, PROFIL EXPORTÉ LE ${dLong(t).toUpperCase()}`);
-
-  H("1. Profil");
-  li(`Prénom du guide : ${guideName()?.name||"(aucun)"}`);
-  li(`Objectif de vie (sommet) : ${M.sommet||M.cap||R}`);
-  li(`Pourquoi : ${M.cap||R}`);
-  li(`Échéance : ${M.echeance||R}`);
-  li(`Massif : ${M.nom||R}`);
-  li(`Date de début : ${dLong(M.debut)}`);
-  li(`Jour actuel : jour ${M.debut?diff(M.debut,t)+1:"?"}`);
-
-  H("2. Diagnostic");
-  h("Résumé du guide (portrait validé)");
-  L.push(plain(M.portrait)||R);
-  h("Éléments retenus");
-  li(`Temps disponible : ${M.dispo||R}`);
-  li(`Matériel et moyens : ${M.materiel||R}`);
-  li(`Familles de l'objectif : ${(M.familles||[]).join(", ")||R}`);
-  h("Étapes prévues");
-  list((M.etapes||[]).map((e,i)=>e?.objectif?`${ZONE_T[i]} : ${e.objectif}${e.jours?` (${e.jours} jours)`:""}`:null).filter(Boolean), x=>x);
-  h("Tests de placement");
-  list(S.placement, p=>`${p.titre} [${p.etat==="validee"?"fait":"à faire"}]${p.critere?` : ${p.critere}`:""}${p.resultat?` | résultat : ${p.resultat}`:""}${p.note?` | ressenti : ${p.note}/5 (${FEEL[p.note-1]})`:""}${p.texte?` | remarque : ${p.texte}`:""}`);
-  h("Échanges du diagnostic");
-  const dm=(C&&C.kind==="diag")?C.msgs.filter(m=>!m.hidden&&(m.role==="user"||m.role==="assistant")):[];
-  if(dm.length){ dm.forEach(m=>{ const v=plain(m.role==="assistant"&&m.result?visible(m.content):m.content); if(v) L.push("",m.role==="user"?"MOI :":"GUIDE :",v); }); }
-  else L.push("(échanges non conservés par l'app une fois la montagne construite)");
-
-  H("3. Zones");
-  const stZ=z=> z<S.zone||S.sommet ? "terminée" : z===S.zone && S.phase!=="placement" ? "en cours" : "à venir";
-  const stE={verrouillee:"verrouillée",active:"en cours",validee:"validée"};
-  const stP={verrouille:"à venir",actif:"en cours",valide:"franchi"};
-  for(let z=0;z<3;z++){
-    h(`${ZONE_T[z]} (${stZ(z)})`);
-    li(`Objectif : ${zoneObj(z)||R}`);
-    if(z===S.zone && !S.sommet && S.phase!=="placement") li(`Jour de zone : ${diff(S.zoneDebut,t)+1} sur ${M.duree} prévus`);
-    const v2=isV2() && palList(z).length;
-    if(v2){
-      if(S.strat?.[z]) li(`Stratégie : ${plain(S.strat[z])}`);
-      if(S.rythme?.[z]) li(`Rythme : ${plain(S.rythme[z])}`);
-      li("Sentiers :"); list(S.dirs?.[z], d=>`${d.nom}${d.direction?` : ${d.direction}`:""}`,1);
-      li("Paliers (remplacent les épreuves) :");
-      list(palList(z), x=>{ const i=palList(z).indexOf(x); return `Palier ${i+1}, ${x.titre} [${stP[x.etat]||x.etat}, ${pasDone(z,i)}/${x.pas.length} pas faits]${x.intention?` : ${x.intention}`:""}${x.progression?` | progression : ${x.progression}`:""}`; },1);
-    } else {
-      const tr=(S.sentiers||[]).filter(s=>zoneEps(s,z).length);
-      li("Sentiers :"); list(tr, s=>`${s.nom} [${s.statut}]${s.pourquoi?` : ${s.pourquoi}`:""}${s.seuil?` | seuil de suffisance : ${s.seuil}`:""}`,1);
-      li("Épreuves :");
-      const eps=tr.flatMap(s=>zoneEps(s,z).map(e=>({s,e})));
-      list(eps, ({s,e})=>{ const p=e.debut?prog(e):null; const r=p?(e.type==="seuil"?`meilleur ${p.best??"-"} / ${e.cible} ${e.unite}`:`${p.count} / ${e.cible}`):""; return `${e.titre} (${s.nom}) [${stE[e.etat]||e.etat}]${e.critere?` : ${e.critere}`:""}${r?` | ${r}`:""}${e.relance?" | relancée":""}`; },1);
-    }
-    li("Vigilance du guide :"); list(S.vig?.[z], x=>`${x.titre}${x.conseil?` : ${x.conseil}`:""}`,1);
-    if(v2){
-      const ci=curPalIdx(z), P=palList(z)[ci];
-      li(`Planning de la semaine${P?` (pas du palier ${ci+1})`:""} :`);
-      list(P?.pas, x=>{ const k=P.pas.indexOf(x), lg=S.pasLog?.[pasKey(z,ci,k)]; return `Pas ${k+1}${x.jour?` (${x.jour})`:""} [${lg?"fait":"à faire"}${lg?.note?`, ressenti ${lg.note}/5`:""}${lg?.mesure?`, mesure : ${lg.mesure}`:""}] : ${x.blocs.map(b=>`${b.titre}${b.minutes?` ${b.minutes} min`:""}${b.sentier?` (${b.sentier})`:""}${b.detail?`, ${b.detail}`:""}`).join(" + ")}`; },1);
-      if(P?.etoile) li(`Étoile : ${plain(P.etoile)}`,1);
-    } else {
-      const P=S.plan?.[z];
-      li("Planning type de la semaine :");
-      if(P?.days?.some(d=>d.length)) P.days.forEach((d,i)=>li(`${JOUR_T[i]} : ${d.length?d.map(x=>`${x.titre}${x.minutes?` ${x.minutes} min`:""}${x.detail?`, ${x.detail}`:""}`).join(" + "):"repos"}`,1));
-      else li(R,1);
-    }
-  }
-  h(`${ZONE_T[3]} (${S.sommet?"atteint":"à venir"})`);
-  li(`Objectif final : ${M.sommet||M.cap||R}`);
-  li("Sentiers :"); li(R,1);
-  li("Épreuves :"); li(R,1);
-  li("Vigilance du guide :"); li(R,1);
-  li("Planning type de la semaine :"); li(R,1);
-
-  H("4. Feux de camp");
-  if(S.sommet) li("Prochain feu : aucun, sommet atteint");
-  else if(S.phase==="placement") li("Prochain feu : après les tests de placement et la construction de la forêt");
-  else li(`Prochain feu : Feu de camp N${S.zone+1}, estimé vers le ${dLong(addDays(S.zoneDebut,M.duree))} (date estimée : début de zone + durée prévue)`);
-  h("Bilans déjà faits");
-  list(S.journal.filter(j=>j.type==="feu"||j.type==="sommet"), j=>`${dLong(j.date)}, ${j.type==="sommet"?"Sommet":"Feu de camp"} : ${plain(j.texte)}`);
-
-  H("5. Journal (10 dernières entrées)");
-  const K={pas:"Pas accompli",palier:"Palier franchi",placement:"Test de placement",diagnostic:"Diagnostic",validation:"Épreuve validée",feu:"Feu de camp",bivouac:"Bivouac",halte:"Halte",relance:"Relance",sommet:"Sommet"};
-  list(S.journal.slice(-10).reverse(), j=>`${dLong(j.date)}, ${K[j.type]||j.type}${j.sentier?`, ${j.sentier}`:""}${j.epreuve?`, ${j.epreuve}`:""}${j.note?` | ressenti : ${FEEL[j.note-1]}`:""}${j.texte?` | ${plain(j.texte)}`:""}`);
-  return L.join("\n")+"\n";
-}
 function vMoi(){
   const done=S.sentiers.reduce((n,s)=>n+s.epreuves.filter(e=>e.etat==="validee").length,0);
   return `<div class="page"><div><h1>${esc(S.massif.nom)}</h1><p class="why">${esc(S.massif.cap)}</p></div>
@@ -1135,7 +1044,6 @@ function vMoi(){
 <section class="card"><h3>Mode secours</h3><p class="muted">Si ton guide intégré ne répond plus : diagnostic par copier-coller avec n’importe quelle IA.</p><button type="button" class="btn ghost" data-a="secours" style="align-self:flex-start">Ouvrir le mode secours</button></section>
 <section class="card"><h3>Rappel du soir</h3><p class="muted">Ajoute un rappel quotidien à ton agenda pour cocher ta journée et choisir l’épreuve de demain.</p>
 <label for="rt" class="muted" style="font-size:13.5px">Heure du rappel</label><input type="time" id="rt" value="21:30"><button type="button" class="btn" data-a="ics">Ajouter à mon agenda</button></section>
-<section class="card"><h3>Exporter mon profil</h3><p class="muted">Copie en un clic tout ce que l’app sait de toi et de ton plan, pour le faire relire par une IA.</p><button type="button" class="btn ghost" data-a="exportProfil" style="align-self:flex-start">Exporter mon profil</button></section>
 <section class="card"><h3>Sauvegarde</h3><p class="muted">Tes données restent sur ce téléphone. Exporte-les de temps en temps pour ne rien perdre.</p>
 <div class="row"><button type="button" class="btn ghost" data-a="export">Exporter</button><button type="button" class="btn ghost" data-a="import">Importer</button></div></section>
 <section class="card"><h3>Le texte du guide</h3><p class="muted">Pour relancer un diagnostic ou le partager.</p><button type="button" class="btn ghost" data-a="copyDiag">Copier le texte du guide</button></section>
@@ -1600,7 +1508,6 @@ const A = {
     const stamp=new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
     const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Ascension//FR","BEGIN:VEVENT",`UID:${uid()}@ascension`,`DTSTAMP:${stamp}`,`DTSTART:${d}T${pad(h)}${pad(m)}00`,"DURATION:PT10M","RRULE:FREQ=DAILY","SUMMARY:Ascension : coche ta journée et choisis l’épreuve de demain","BEGIN:VALARM","TRIGGER:PT0M","ACTION:DISPLAY","DESCRIPTION:Ascension","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
     download("rappel-ascension.ics", ics, "text/calendar"); },
-  exportProfil:async()=>{ const txt=profilTexte(); if(await copy(txt)) toast("Profil copié"); else { download(`ascension-profil-${today()}.txt`, txt, "text/plain;charset=utf-8"); toast("Copie impossible : profil téléchargé en .txt"); } },
   export:()=>download(`ascension-${today()}.json`, JSON.stringify({...S, _chat:C||null, _guide:guideName()||null},null,1), "application/json"),
   import:()=>{ const i=document.createElement("input"); i.type="file"; i.accept="application/json,.json";
     i.onchange=()=>{ const f=i.files[0]; if(!f) return; f.text().then(t=>{ try{ const j=JSON.parse(t); if(!j.massif) throw 0; const ch=j._chat, gd=j._guide; delete j._chat; delete j._guide; S=j; C=ch||null; setChat(C); if(gd) setGuideName(gd); save(); UI.tab="montagne"; render(); toast("Sauvegarde importée."); }catch(e){ toast("Ce fichier n’est pas une sauvegarde Ascension."); } }); };
