@@ -2,7 +2,7 @@
 
 Une montagne se grimpe pas à pas. Ascension est un arbre de compétences pour la vraie vie : un guide IA construit et adapte le chemin vers un objectif (le sommet), zone par zone.
 
-**Version : v31 (12 novembre 2026). Cache : `ascension-v31`.**
+**Version : v32 (12 novembre 2026). Cache : `ascension-v32`.**
 
 Ce zip suffit pour reprendre le projet dans une nouvelle discussion. Deux documents font référence :
 
@@ -110,6 +110,7 @@ Première conversation et tests de placement, construction de la montagne, déta
 - **v29** : annulation d'un pas, règle « adapter, jamais niveler vers le bas ».
 - **v30** : « Le mot du guide » après chaque pas, documentation de reprise dans le zip.
 - **v31** : mot du guide recentré. Premier essai réel décevant (mauvais prochain pas cité, dépassement de FC max ignoré, repère plus bas que le niveau atteint) : la mission n'utilise plus `CORE` ni le contexte complet, mais une consigne courte, un cadre allégé (`motContext`) et les prochaines occasions par sentier (`motOccasions`), avec une relecture obligatoire des chiffres et du mot.
+- **v32** : mot du guide moins alarmiste. Deuxième essai réel : fond juste, ton trop fort. Quatre intentions au lieu de trois : « vigilance » (rare, orange, seulement si l'essentiel du pas n'est pas respecté ou vrai signal), « ajuster » (réglage de coach, affichage normal), « orienter », « encourager ». Le message ouvre sur ce qui a marché. Volet mental : un outil concret quand le mot de la personne l'appelle. Feu de camp : nouvelle étape « La tête » qui relit les mots de la zone.
 
 ## 8. Brancher le guide (première installation)
 
