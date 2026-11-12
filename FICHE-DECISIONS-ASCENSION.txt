@@ -51,6 +51,8 @@ Base commune à toutes les discussions du projet. Fusion de la discussion « Arb
 - Calibrage : c'est le guide qui décide (organisation, paliers, durées, jours), pas Claude.
 - Quand c'est trop dur : adapter au niveau, jamais niveler vers le bas. Le but est de réussir. Le guide garde l'objectif et découpe le chemin avec des exercices intermédiaires, puis termine par une tentative au maximum (ex. 10 tractions non réussies → tractions australiennes, descentes contrôlées, puis « fais ton max »). Il dit ce qu'il a découpé. Seule exception : de vrais signaux de fatigue (sommeil dégradé, douleur qui persiste, « Très dur » plusieurs fois de suite), où il peut décaler la charge de quelques jours sans toucher à l'objectif.
 - Le mot du guide : après chaque pas enregistré, le guide lit la séance et répond en 2 ou 3 phrases, avec une seule intention choisie dans cet ordre : prévenir (mesure incohérente, signal de fatigue, consigne non tenue), orienter (un repère chiffré pour le prochain pas), encourager (seulement un progrès précis et vérifiable). Pas de flatterie, pas de morale, pas de question, il ne modifie jamais le programme tout seul et renvoie vers « Réorganiser ma semaine » si besoin. Pour un hors piste, il ne répond que si la séance change quelque chose à la suite.
+- Le mot du guide, réglages actés après le premier essai réel : il reste concentré sur les sentiers de la séance qui vient d'être faite (cadre allégé, valable pour cette réflexion uniquement, pas pour le reste de l'app). Il ne recopie pas le prochain pas : il donne une amélioration à appliquer à la prochaine occasion de travailler ces sentiers. Il relit d'abord chaque chiffre, maximums compris, et le mot de la personne. Un dépassement mérite un seuil d'action (ex. « ralentis dès que tu vois 150 bpm »). Une difficulté sur un bloc court ou mental (ex. tenir 5 minutes de respiration) compte autant qu'un chiffre et reçoit une marche intermédiaire. Jamais de repère plus bas que ce qui vient d'être réussi.
+- Un effort imposé par la vie de la personne (ex. la côte du trajet du travail, FC très haute) n'est pas une faute : le guide ne dit pas de l'éviter, il le compte comme une charge intense.
 - Pertinence de l'IA : toujours y penser. Chaque nouveauté doit donner au guide les données réelles utiles et lui dire quoi en faire.
 - Hors piste : le guide reçoit les séances réelles dans l'ordre (pas prévus et hors piste, avec dates et ressentis) pour le palier en cours et le précédent. Il en tient compte dès le palier suivant, puis au feu de camp. Ce n'est jamais une faute. Si la charge réelle dépasse le plan et que les ressentis tiennent, il monte un peu. Une activité hors piste qui revient souvent s'intègre aux pas suivants.
 
@@ -105,6 +107,8 @@ Base commune à toutes les discussions du projet. Fusion de la discussion « Arb
 - Un guide qui « allège » ou « consolide » quand c'est dur : cela nivelle vers le bas. Remplacé par la règle des exercices intermédiaires.
 - Une vraie conversation avec le guide après chaque pas : trop lourd au quotidien, la conversation existe déjà au feu de camp.
 - Un mot du guide pour chaque hors piste : du bruit, il ne parle que si la séance compte.
+- Envoyer toute la montagne au guide pour le mot d'après séance : il s'y perd et cite le mauvais pas.
+- Écrire le prochain pas tel quel dans le mot du guide : il doit porter l'amélioration, pas recopier le programme.
 - La prise en compte du hors piste seulement au feu de camp : trop tard, le guide le lit dès le palier suivant.
 - Les dérives du guide : trop de médical, trop de psychologie, conclusion qui n'arrive pas, prénom inventé.
 - Les accroches A, B et C, jugées « trop Pokémon ».
@@ -124,7 +128,7 @@ Base commune à toutes les discussions du projet. Fusion de la discussion « Arb
 - Une Halte qui se déclencherait aussi quand le retard menace l'échéance [proposé, non validé].
 - Le nom définitif de l'app (« Ascension ») [à confirmer].
 - Les données envoyées à Gemini sur l'offre gratuite.
-- Le passage du palier 1 au palier 2 a fonctionné en réel avec Mistral. Reste à vérifier en réel : la prise en compte du hors piste au palier suivant, la règle « adapter, pas niveler » et la pertinence du mot du guide.
+- Le passage du palier 1 au palier 2 a fonctionné en réel avec Mistral. Reste à vérifier en réel : la prise en compte du hors piste au palier suivant, la règle « adapter, pas niveler » et la pertinence du mot du guide après son recentrage (v31).
 - Un pas fait seulement en partie : pour l'instant, il se note en séance en plus ou dans le mot pour le guide.
 
-Date : 12 novembre 2026. Version : v30 (cache ascension-v30).
+Date : 12 novembre 2026. Version : v31 (cache ascension-v31).

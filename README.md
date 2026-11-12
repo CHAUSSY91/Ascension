@@ -2,7 +2,7 @@
 
 Une montagne se grimpe pas à pas. Ascension est un arbre de compétences pour la vraie vie : un guide IA construit et adapte le chemin vers un objectif (le sommet), zone par zone.
 
-**Version : v30 (12 novembre 2026). Cache : `ascension-v30`.**
+**Version : v31 (12 novembre 2026). Cache : `ascension-v31`.**
 
 Ce zip suffit pour reprendre le projet dans une nouvelle discussion. Deux documents font référence :
 
@@ -82,11 +82,11 @@ Un seul fichier, JavaScript sans bibliothèque. L'état complet est l'objet `S`,
 - Paliers et pas : `palList`, `curPalIdx`, `pasKey`, `pasDone`, `nextPas`, `pasJours` (jour de chaque pas), `normPas`, `checkPalier` (contrôle : chaque sentier présent, chaque pas dans le temps disponible), `detailPalier` (demande au guide le détail d'un palier), `remapPasLog` (après une réorganisation).
 - Écrans : `vMontagne`, `vJourV2` (Aujourd'hui), `vJournal`, `vMoi`, `sheetZone`, `planHTMLv2` (« Voir ma semaine » et PDF).
 - Saisie : `sheetPas` (pas accompli, modifier, annuler), `sheetHors`, `sheetHorsPick`, `sheetHorsForm`, `sheetPalier`.
-- Guide : `CORE` (consigne générale), `context()` et `v2Context()` (données envoyées), `seancesReelles` (pas et hors pistes dans l'ordre réel), `motPrompt` et `motDuGuide` (mot après une séance), `promptFeu`, `callGuide` (appel réseau), `extractJSON`.
+- Guide : `CORE` (consigne générale), `context()` et `v2Context()` (données envoyées), `seancesReelles` (pas et hors pistes dans l'ordre réel), `motPrompt`, `motContext`, `motOccasions` et `motDuGuide` (mot après une séance), `promptFeu`, `callGuide` (appel réseau), `extractJSON`.
 
 ### Les missions du guide (dans le code, chercher « MISSION : »)
 
-Première conversation et tests de placement, construction de la montagne, détail d'un palier, mot du guide après une séance, réorganisation du palier, feu de camp, sommet, bivouac, halte. Toutes partent de `CORE`. **Une règle ajoutée dans `CORE` vaut pour toutes les missions** : vérifier qu'aucune mission ne la contredit.
+Première conversation et tests de placement, construction de la montagne, détail d'un palier, mot du guide après une séance, réorganisation du palier, feu de camp, sommet, bivouac, halte. Toutes partent de `CORE`, **sauf le mot du guide**, qui a sa propre consigne courte (`motPrompt`) et un cadre allégé, pour rester concentré sur la séance. **Une règle ajoutée dans `CORE` vaut pour les autres missions** : vérifier qu'aucune ne la contredit, et la reporter dans `motPrompt` si elle concerne aussi le mot du guide.
 
 ### Le guide IA
 
@@ -109,6 +109,7 @@ Première conversation et tests de placement, construction de la montagne, déta
 - **v28** : « Hors piste » (séance en plus, avancer un pas prévu), modification d'un pas, séances réelles envoyées au guide.
 - **v29** : annulation d'un pas, règle « adapter, jamais niveler vers le bas ».
 - **v30** : « Le mot du guide » après chaque pas, documentation de reprise dans le zip.
+- **v31** : mot du guide recentré. Premier essai réel décevant (mauvais prochain pas cité, dépassement de FC max ignoré, repère plus bas que le niveau atteint) : la mission n'utilise plus `CORE` ni le contexte complet, mais une consigne courte, un cadre allégé (`motContext`) et les prochaines occasions par sentier (`motOccasions`), avec une relecture obligatoire des chiffres et du mot.
 
 ## 8. Brancher le guide (première installation)
 
