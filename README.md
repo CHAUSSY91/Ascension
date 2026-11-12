@@ -1,51 +1,127 @@
 # Ascension
 
-Une montagne se grimpe pas à pas. Version 1 « manuelle » : l’app gère la montagne, les épreuves, les coches et le journal ; le guide IA (Claude, Mistral…) s’utilise par copier-coller.
+Une montagne se grimpe pas à pas. Ascension est un arbre de compétences pour la vraie vie : un guide IA construit et adapte le chemin vers un objectif (le sommet), zone par zone.
 
-## Mettre en ligne sur GitHub Pages
+**Version : v30 (12 novembre 2026). Cache : `ascension-v30`.**
 
-1. Crée un dépôt sur GitHub (privé ou public).
-2. Envoie tout le contenu de ce dossier à la racine du dépôt : `index.html`, `manifest.webmanifest`, `sw.js`, `README.md` et toutes les images.
-3. Dans le dépôt : **Settings → Pages → Branch : main, dossier / (root) → Save**.
-4. Après une minute, l’app est en ligne à l’adresse affichée (`https://<pseudo>.github.io/<depot>/`).
-5. Sur ton téléphone, ouvre cette adresse puis « Ajouter à l’écran d’accueil ».
+Ce zip suffit pour reprendre le projet dans une nouvelle discussion. Deux documents font référence :
 
-Note : GitHub Pages en plan gratuit publie le site même si le dépôt est privé ; l’adresse reste simplement peu connue. Tes données, elles, ne quittent jamais ton téléphone.
+- `README.md` (ce fichier) : comment reprendre, comment l'app est faite, comment livrer.
+- `FICHE-DECISIONS-ASCENSION.txt` : tout ce que Mrik a acté (vision, vocabulaire, guide, interface, rejets, questions ouvertes). **À lire avant toute modification.**
 
-## Utilisation
+---
 
-1. **Diagnostic** : copie le texte du guide, colle-le dans Claude ou Mistral, réponds, fais les tests, puis colle le bloc JSON final dans l’app.
-2. **Chaque jour** : coche tes épreuves, valide-les avec ton ressenti, choisis le soir l’épreuve du lendemain.
-3. **Bivouac, feu de camp, halte** : l’app prépare un texte pour ton guide ; tu colles sa réponse, la montagne s’adapte.
-4. **Moi** : rappel du soir (ajout à l’agenda), export et import de sauvegarde.
+## 1. Reprendre dans une nouvelle discussion (pour Claude)
 
-## Mettre à jour l’app
+1. Mrik dépose le dernier `ascension.zip`. Dézippe-le et travaille sur cette version, jamais sur une plus ancienne.
+2. Lis `FICHE-DECISIONS-ASCENSION.txt` en entier, puis ce README.
+3. Règles de travail avec Mrik :
+   - **Valider avant de coder** : propose, donne ton avis franc, signale les erreurs, puis code une fois que c'est acté.
+   - **Toujours penser à la pertinence du guide IA** : chaque nouveauté doit lui donner les données réelles utiles et lui dire quoi en faire.
+   - **Le guide décide du calibrage** (organisation, paliers, durées, jours), pas Claude.
+   - **Adapter au niveau, jamais niveler vers le bas** : voir la règle « QUAND C'EST TROP DUR » dans `CORE`.
+   - Mrik écrit en français familier, lit sur téléphone : réponses courtes, sans jargon.
+4. À chaque version livrée :
+   - incrémenter `CACHE` dans `sw.js` (`ascension-vN`) ;
+   - mettre à jour `FICHE-DECISIONS-ASCENSION.txt` (décisions, rejets, date, version) et ce README (version, historique) ;
+   - livrer **`ascension.zip`** (toujours ce nom, sans numéro), contenant un dossier `ascension/` ;
+   - dire clairement ce qui a été testé et ce qui ne l'a pas été.
+5. Ne jamais écrire de clé ni d'adresse de relais dans les fichiers.
 
-Après une modification, change `CACHE = "ascension-v1"` en `v2`, `v3`… dans `sw.js` pour forcer les téléphones à recharger les fichiers.
+## 2. Installer une version (pour Mrik)
 
-## Guide intégré (facultatif)
+1. Dans l'app, onglet **Moi** : exporte une sauvegarde (par sécurité).
+2. Sur le dépôt GitHub, envoie **`index.html`** et **`sw.js`** (upload, puis commit). Les images ne changent pas. Le README et la fiche n'ont pas besoin d'être en ligne.
+3. Attends 2 minutes, ferme complètement l'app, rouvre-la.
 
-### Avec Gemini (gratuit, recommandé)
-1. Va sur **aistudio.google.com**, connecte-toi avec ton compte Google, touche **Get API key** puis **Create API key**.
-2. Dans Ascension : **Brancher mon guide** → modèle **Gemini Flash** → colle la clé → **Enregistrer et tester**. Pas de relais nécessaire.
+Si l'ancienne version reste affichée, c'est que `CACHE` n'a pas été incrémenté dans `sw.js`.
 
-Sur l’offre gratuite, Google peut utiliser tes échanges pour améliorer ses modèles.
+## 3. Les fichiers
 
-### Avec Mistral (via relais)
+| Fichier | Rôle |
+|---|---|
+| `index.html` | Toute l'app : styles, interface, logique, consignes du guide. |
+| `sw.js` | Service worker (hors ligne, cache). Contient `CACHE = "ascension-vN"`. |
+| `manifest.webmanifest`, `icon-*.png`, `apple-touch-icon.png` | Installation sur le téléphone. |
+| `montagne.jpg`, `camp-0.jpg` à `camp-4.jpg` | Carte et scènes des camps. |
+| `relais-cloudflare.js` | Code du relais à coller dans un Worker Cloudflare (pour Mistral). |
+| `README.md`, `FICHE-DECISIONS-ASCENSION.txt` | Documentation de reprise. |
 
-Mistral n’accepte pas les appels directs depuis une page web. L’app passe donc par un petit relais gratuit chez Cloudflare, qui transmet la demande à Mistral et renvoie la réponse. Il ne stocke rien.
+Hébergement : GitHub Pages. Aucune compilation : on modifie `index.html` directement.
 
-### Créer le relais (une seule fois, 5 minutes)
+## 4. Le modèle (résumé, la fiche fait foi)
 
-1. Crée un compte gratuit sur **dash.cloudflare.com**.
-2. Menu **Workers & Pages** → **Create** → **Create Worker** (modèle « Hello World »). Nomme-le `ascension-relais`, puis **Deploy**.
-3. Touche **Edit code**, efface tout, colle le contenu du fichier `relais-cloudflare.js`, puis **Deploy**.
-4. Copie l’adresse du worker, du type `https://ascension-relais.<ton-pseudo>.workers.dev`.
+- **Massif** : une compétence, avec un **sommet** (objectif final) et une échéance.
+- **Zone** : forêt, pentes, falaise. Un sous-objectif et une durée. Se termine par un **feu de camp**.
+- **Sentier** : une discipline avec une direction (ex. Endurance).
+- **Palier** : environ une semaine, plus exigeant que le précédent. Le guide n'en détaille qu'un à la fois.
+- **Pas** : la séance du jour, faite de blocs rattachés à des sentiers, avec un jour conseillé. Se note avec un ressenti (1 à 5), une date, une mesure et un mot.
+- **Hors piste** : séance en plus du programme, ou pas prévu fait un autre jour.
+- **Mot du guide** : réponse courte du guide après chaque pas.
+- **Étoile** : note de bas de palier. **Vigilance** : point faible signalé par le guide.
 
-### Brancher le guide
+## 5. Architecture de `index.html`
 
-Dans Ascension : **Brancher mon guide** (ou onglet **Moi**) → colle ta clé Mistral, l’adresse du relais, choisis le modèle → **Enregistrer et tester**.
+Un seul fichier, JavaScript sans bibliothèque. L'état complet est l'objet `S`, enregistré dans `localStorage` (clé `ascension-v1`) par `save()`. L'interface est redessinée par `render()`. Les clics passent par `data-a="nomAction"` et l'objet d'actions `A`. Les fiches du bas s'ouvrent avec `openSheet()`.
 
-- La clé reste sur le téléphone et n’est jamais incluse dans les sauvegardes.
-- Le relais n’accepte que les demandes venant de `chaussy91.github.io`. Si ton adresse GitHub change, modifie la ligne `ORIGINE` dans le relais.
-- Sans clé, le copier-coller reste disponible.
+### L'état `S` (champs utiles)
+
+- `S.massif` : nom, sommet, échéance, cap, dispo (temps disponible), matériel, portrait, familles, étapes.
+- `S.zone` (0 à 3), `S.zoneDebut`, `S.phase`, `S.sommet`.
+- `S.strat[z]`, `S.rythme[z]`, `S.dirs[z]` (sentiers de la zone), `S.vig[z]` (vigilances).
+- `S.pal[z]` : liste des paliers `{titre, intention, progression, etat: verrouille|actif|valide, pas:[{jour, blocs:[{sentier,titre,minutes,detail}]}], etoile, message, note, texte}`.
+- `S.pasLog["z:palier:pas"]` : `{date, note, mesure, texte}` pour chaque pas fait.
+- `S.hors` : séances hors piste `{id, z, pi, date, titre, minutes, note, mesure, texte, sentier}`.
+- `S.mot` : dernier mot du guide `{z, ref, date, texte, type}`.
+- `S.journal` : entrées `{date, type, ref, sentier, epreuve, note, texte, guide}`. `ref` relie une entrée à un pas (`pas:z:p:i`) ou à un hors piste (`hors:id`).
+
+`isV2()` indique le modèle actuel (paliers et pas). L'ancien modèle d'épreuves reste dans le code pour les anciennes sauvegardes : ne pas le supprimer sans le décider avec Mrik.
+
+### Fonctions clés
+
+- Paliers et pas : `palList`, `curPalIdx`, `pasKey`, `pasDone`, `nextPas`, `pasJours` (jour de chaque pas), `normPas`, `checkPalier` (contrôle : chaque sentier présent, chaque pas dans le temps disponible), `detailPalier` (demande au guide le détail d'un palier), `remapPasLog` (après une réorganisation).
+- Écrans : `vMontagne`, `vJourV2` (Aujourd'hui), `vJournal`, `vMoi`, `sheetZone`, `planHTMLv2` (« Voir ma semaine » et PDF).
+- Saisie : `sheetPas` (pas accompli, modifier, annuler), `sheetHors`, `sheetHorsPick`, `sheetHorsForm`, `sheetPalier`.
+- Guide : `CORE` (consigne générale), `context()` et `v2Context()` (données envoyées), `seancesReelles` (pas et hors pistes dans l'ordre réel), `motPrompt` et `motDuGuide` (mot après une séance), `promptFeu`, `callGuide` (appel réseau), `extractJSON`.
+
+### Les missions du guide (dans le code, chercher « MISSION : »)
+
+Première conversation et tests de placement, construction de la montagne, détail d'un palier, mot du guide après une séance, réorganisation du palier, feu de camp, sommet, bivouac, halte. Toutes partent de `CORE`. **Une règle ajoutée dans `CORE` vaut pour toutes les missions** : vérifier qu'aucune mission ne la contredit.
+
+### Le guide IA
+
+- Fournisseur principal : Mistral Large, via un relais Cloudflare (Mistral refuse les appels directs depuis une page web). Secours : Gemini Flash, sans relais. Mode secours par copier-coller dans l'onglet Moi.
+- La clé et l'adresse du relais se saisissent dans l'onglet Moi. Elles restent sur le téléphone, hors des sauvegardes.
+- Sans clé ou hors connexion, l'app fonctionne : les pas s'enregistrent, seules les réponses du guide manquent.
+
+## 6. Tester avant de livrer
+
+- Syntaxe : extraire le contenu de `<script>` et lancer `node --check`.
+- Parcours : Playwright (Chromium, 390 × 844), en ouvrant `index.html` en local. Construire un état avec `buildFromDiag({... zone: Z})`, où `Z` suit le format `ZONE_JSON` de `CORE`.
+- Guide simulé : remplacer `getKey` et `callGuide` dans la page (`getKey=()=>({key:"x",model:"m",relay:"r"}); callGuide=async()=>'{"type":"orienter","mot":"…"}'`).
+- Vérifier aussi une sauvegarde ancienne (journal sans `ref`).
+- Les réponses réelles de Mistral ne peuvent pas être testées hors du téléphone : le dire à Mrik et lui demander une capture.
+
+## 7. Historique récent
+
+- **v26** : nouveau modèle sentiers, paliers, pas. Stratégie du guide, un palier détaillé à la fois, contrôle automatique, « Réajuster ma forêt ».
+- **v27** : cadenas sur les paliers, « Voir ma semaine » et PDF par jours de la semaine, un jour conseillé par pas.
+- **v28** : « Hors piste » (séance en plus, avancer un pas prévu), modification d'un pas, séances réelles envoyées au guide.
+- **v29** : annulation d'un pas, règle « adapter, jamais niveler vers le bas ».
+- **v30** : « Le mot du guide » après chaque pas, documentation de reprise dans le zip.
+
+## 8. Brancher le guide (première installation)
+
+### Gemini (gratuit, sans relais)
+1. Sur aistudio.google.com : **Get API key**, puis **Create API key**.
+2. Dans Ascension, onglet **Moi** : **Brancher mon guide**, modèle Gemini Flash, colle la clé, **Enregistrer et tester**.
+
+Sur l'offre gratuite, Google peut utiliser les échanges pour améliorer ses modèles.
+
+### Mistral (via relais)
+1. Crée un compte gratuit sur dash.cloudflare.com.
+2. **Workers & Pages**, **Create Worker**, puis **Deploy**.
+3. **Edit code** : efface tout, colle le contenu de `relais-cloudflare.js`, **Deploy**.
+4. Dans Ascension, onglet **Moi** : colle la clé Mistral et l'adresse du worker, choisis le modèle, **Enregistrer et tester**.
+
+Le relais ne stocke rien et n'accepte que les demandes venant de l'adresse GitHub Pages de l'app (ligne `ORIGINE` du relais, à adapter si l'adresse change).
