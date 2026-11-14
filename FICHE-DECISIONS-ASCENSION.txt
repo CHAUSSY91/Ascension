@@ -55,6 +55,12 @@ Base commune à toutes les discussions du projet. Fusion de la discussion « Arb
 - Le ton du mot du guide : pas alarmiste. « Vigilance » (étiquette et contour orange) est réservé aux cas vraiment sérieux : l'essentiel du pas non respecté (ex. FC moyenne à 167 au lieu de 150-155), vraie fatigue, douleur. Un pic ponctuel avec une moyenne dans la cible est un simple réglage : « à ajuster », affichage normal. Le message commence par ce qui a marché. Les mots forts (« attention », « danger »…) sont bannis sauf si c'est nécessaire.
 - La psychologie : un peu dans le mot du guide, le fond au feu de camp. Dans le mot, seulement quand le mot de la personne l'appelle (ex. « dur car trop impatient ») : un outil mental concret, sans interprétation, adapté à son fonctionnement d'après le portrait. Au feu de camp, le guide relit tous les mots de la zone, relève ce qui revient côté mental et en parle avec la personne. Il ne commente jamais un diagnostic ni un traitement.
 - Un effort imposé par la vie de la personne (ex. la côte du trajet du travail, FC très haute) n'est pas une faute : le guide ne dit pas de l'éviter, il le compte comme une charge intense.
+- Le détail d'un bloc (v33) : la personne doit pouvoir le faire sans rien demander. Toujours dans cet ordre, en 2 à 4 phrases : mise en route, cœur chiffré (durées, répétitions, intensité), seuil d'action (« si…, alors… »), fin du bloc. Un exemple par famille dans la consigne. Pas de bibliothèque de séances.
+- Le temps disponible (v33) : calé sur la vie de famille, chaque pas tient dedans. Plus de plafond de 20 min par sentier. Seule exception : un besoin précis de l'objectif. Le guide ne dépasse jamais seul : au feu de camp (étape « Face à l'enjeu »), il met la personne face à ce que le sommet exige, chiffres à l'appui. Deux issues, elle tranche : elle trouve le temps (créneau long : durée, moment, nombre de pas par palier, vérifié par l'app) ou ils conviennent d'un objectif de secours. Le sommet d'origine reste affiché.
+- « Chaque palier plus exigeant que le précédent » : règle gardée, sinon les séances deviennent trop simples. La récupération passe par les vrais signaux de fatigue, désormais chiffrés par le bilan de palier.
+- Zones cardio (v33) : FC de repos et FC max saisies dans Moi (mesurée ou estimée). L'app calcule 5 zones et les envoie au guide, qui en tire toutes ses cibles. Il n'invente jamais une FC max.
+- Bilan de palier (v33) : à la validation, facultatif : sommeil (1 à 5), FC au réveil, poids, douleur qui dure, un moment où le cap a été tenu. FC au réveil en hausse de 5 bpm, sommeil à 1 ou 2, douleur = signaux de fatigue. Le moment du cap nourrit « La tête » au feu de camp. FC, poids et douleur ne s'affichent que pour un objectif physique.
+- Suivi de l'échéance (v33) : l'app compare le rythme réel au calendrier (feu de camp prévu, feu au rythme actuel, marge avant le sommet). Affiché sur la montagne et dans l'onglet Sommet. Le guide n'en parle qu'à partir de 14 jours de retard ou si la marge devient négative, et propose de resserrer ou regrouper des paliers, jamais de doubler la charge.
 - Pertinence de l'IA : toujours y penser. Chaque nouveauté doit donner au guide les données réelles utiles et lui dire quoi en faire.
 - Hors piste : le guide reçoit les séances réelles dans l'ordre (pas prévus et hors piste, avec dates et ressentis) pour le palier en cours et le précédent. Il en tient compte dès le palier suivant, puis au feu de camp. Ce n'est jamais une faute. Si la charge réelle dépasse le plan et que les ressentis tiennent, il monte un peu. Une activité hors piste qui revient souvent s'intègre aux pas suivants.
 
@@ -79,6 +85,7 @@ Base commune à toutes les discussions du projet. Fusion de la discussion « Arb
 - Une discussion par sujet : les très longues discussions finissent par couper.
 
 6. INTERFACE
+- Les sentiers suivent les vrais chemins de la photo (v33) : tracés relevés à la main, deux voies en forêt et dans les pentes, une sur la falaise. Un nouveau massif prend l'autre voie.
 - Montagne de nuit (image Gemini), sentiers lumineux, médaillons dorés : coche pour validé, pulsation pour en cours, pointillés pour le suivant, cadenas pour verrouillé. Les feux servent de camps, une porte verrouillée marque la falaise.
 - Une scène par camp. Drapeau français au sommet.
 - En-tête : le lieu en haut, le sous-objectif en titre, une phrase du jour qui évolue. L'objectif final n'apparaît que dans l'onglet Sommet.
@@ -116,10 +123,13 @@ Base commune à toutes les discussions du projet. Fusion de la discussion « Arb
 - La prise en compte du hors piste seulement au feu de camp : trop tard, le guide le lit dès le palier suivant.
 - Les dérives du guide : trop de médical, trop de psychologie, conclusion qui n'arrive pas, prénom inventé.
 - Les accroches A, B et C, jugées « trop Pokémon ».
+- Un affûtage codé dans l'app : trop lié à la course, l'app doit couvrir tous les aspects de la vie. Le guide applique les principes du domaine.
+- Une semaine allégée planifiée toutes les 4 semaines : contredit « chaque palier plus exigeant ».
+- Le plafond de 20 minutes par sentier : il rend impossible une vraie séance d'endurance.
 
 8. IDÉES POUR PLUS TARD
 - Un bouton « Répondre » sous le mot du guide [proposé, non validé].
-- Des sentiers qui suivent les chemins de l'image Gemini, avec plusieurs tracés possibles, un par ascension. Refaire une montagne ou réutiliser la même image.
+- Refaire une montagne ou réutiliser la même image. Les sentiers de l'ancien modèle d'épreuves ne suivent pas encore la photo.
 - Des images en haute définition, une montagne « propre », peut-être un illustrateur.
 - Le contenu de la Halte.
 - Le sommeil transformé en sentier.
@@ -133,6 +143,10 @@ Base commune à toutes les discussions du projet. Fusion de la discussion « Arb
 - Le nom définitif de l'app (« Ascension ») [à confirmer].
 - Les données envoyées à Gemini sur l'offre gratuite.
 - Le passage du palier 1 au palier 2 a fonctionné en réel avec Mistral. Reste à vérifier en réel : la prise en compte du hors piste au palier suivant, la règle « adapter, pas niveler » et la pertinence du mot du guide après son recentrage (v31) et son changement de ton (v32) ; la nouvelle étape « La tête » du feu de camp.
+- Distance du sommet : l'app vise le 32 km, le programme écrit à la main visait le 24 km (avis de Claude). À trancher, au plus tard au feu de camp de fin mars.
+- « Objectif de secours » : codé comme un plan B convenu au feu de camp quand le temps manque. [interprétation de Claude, à confirmer]
+- Libellé du bilan : « Un moment où tu as tenu ton cap », avec le cap rappelé dessous, pour rester valable hors sport. [à confirmer]
+- À vérifier en réel avec Mistral (v33) : la précision des détails de bloc, l'usage des zones cardio, la réaction au suivi de l'échéance et aux bilans, l'étape « Face à l'enjeu ».
 - Un pas fait seulement en partie : pour l'instant, il se note en séance en plus ou dans le mot pour le guide.
 
-Date : 12 novembre 2026. Version : v32 (cache ascension-v32).
+Date : 14 novembre 2026. Version : v33 (cache ascension-v33).

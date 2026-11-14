@@ -2,7 +2,7 @@
 
 Une montagne se grimpe pas à pas. Ascension est un arbre de compétences pour la vraie vie : un guide IA construit et adapte le chemin vers un objectif (le sommet), zone par zone.
 
-**Version : v32 (12 novembre 2026). Cache : `ascension-v32`.**
+**Version : v33 (14 novembre 2026). Cache : `ascension-v33`.**
 
 Ce zip suffit pour reprendre le projet dans une nouvelle discussion. Deux documents font référence :
 
@@ -59,6 +59,10 @@ Hébergement : GitHub Pages. Aucune compilation : on modifie `index.html` direct
 - **Hors piste** : séance en plus du programme, ou pas prévu fait un autre jour.
 - **Mot du guide** : réponse courte du guide après chaque pas.
 - **Étoile** : note de bas de palier. **Vigilance** : point faible signalé par le guide.
+- **Repères** (onglet Moi) : FC de repos, FC max (mesurée ou estimée), date exacte du sommet. L'app en tire les zones cardio.
+- **Bilan de palier** : à la validation d'un palier, sommeil, FC au réveil, poids, douleur, moment où le cap a été tenu (tout facultatif).
+- **Suivi de l'échéance** : rythme réel comparé au calendrier, affiché sur la montagne et envoyé au guide.
+- **Créneau long** et **objectif de secours** : convenus au feu de camp, quand l'objectif demande plus que le temps disponible.
 
 ## 5. Architecture de `index.html`
 
@@ -73,6 +77,9 @@ Un seul fichier, JavaScript sans bibliothèque. L'état complet est l'objet `S`,
 - `S.pasLog["z:palier:pas"]` : `{date, note, mesure, texte}` pour chaque pas fait.
 - `S.hors` : séances hors piste `{id, z, pi, date, titre, minutes, note, mesure, texte, sentier}`.
 - `S.mot` : dernier mot du guide `{z, ref, date, texte, type}`.
+- `S.profil` : `{fcRepos, fcMax, fcMesuree}`. Suit la personne d'un massif à l'autre.
+- `S.massif.echeanceDate` (date exacte, sinon déduite du texte `echeance`), `S.massif.long` `{minutes, par, quand}`, `S.massif.secours`, `S.massif.voie` (numéro du tracé sur la photo).
+- `S.pal[z][i].bilan` : `{sommeil, fcReveil, poids, douleur, cap}`.
 - `S.journal` : entrées `{date, type, ref, sentier, epreuve, note, texte, guide}`. `ref` relie une entrée à un pas (`pas:z:p:i`) ou à un hors piste (`hors:id`).
 
 `isV2()` indique le modèle actuel (paliers et pas). L'ancien modèle d'épreuves reste dans le code pour les anciennes sauvegardes : ne pas le supprimer sans le décider avec Mrik.
@@ -80,6 +87,8 @@ Un seul fichier, JavaScript sans bibliothèque. L'état complet est l'objet `S`,
 ### Fonctions clés
 
 - Paliers et pas : `palList`, `curPalIdx`, `pasKey`, `pasDone`, `nextPas`, `pasJours` (jour de chaque pas), `normPas`, `checkPalier` (contrôle : chaque sentier présent, chaque pas dans le temps disponible), `detailPalier` (demande au guide le détail d'un palier), `remapPasLog` (après une réorganisation).
+- v33 : `zonesFC`, `fcContext`, `echeanceDate`, `suivi`, `suiviTxt`, `suiviContext`, `longSlot`, `allBilans`, `bilanTxt`, `isPhys`, `reperesCard`, `sheetReperes`.
+- Carte : `RAW` contient les tracés relevés sur `montagne.jpg` (coordonnées de l'image, 688 × 1529), plusieurs voies par zone. `zoneRoute`, `baseRoute`, `topRoute` les lissent ; `rAt` place un point le long du tracé, `rD` dessine un tronçon. L'ancien modèle d'épreuves garde ses courbes.
 - Écrans : `vMontagne`, `vJourV2` (Aujourd'hui), `vJournal`, `vMoi`, `sheetZone`, `planHTMLv2` (« Voir ma semaine » et PDF).
 - Saisie : `sheetPas` (pas accompli, modifier, annuler), `sheetHors`, `sheetHorsPick`, `sheetHorsForm`, `sheetPalier`.
 - Guide : `CORE` (consigne générale), `context()` et `v2Context()` (données envoyées), `seancesReelles` (pas et hors pistes dans l'ordre réel), `motPrompt`, `motContext`, `motOccasions` et `motDuGuide` (mot après une séance), `promptFeu`, `callGuide` (appel réseau), `extractJSON`.
@@ -111,6 +120,8 @@ Première conversation et tests de placement, construction de la montagne, déta
 - **v30** : « Le mot du guide » après chaque pas, documentation de reprise dans le zip.
 - **v31** : mot du guide recentré. Premier essai réel décevant (mauvais prochain pas cité, dépassement de FC max ignoré, repère plus bas que le niveau atteint) : la mission n'utilise plus `CORE` ni le contexte complet, mais une consigne courte, un cadre allégé (`motContext`) et les prochaines occasions par sentier (`motOccasions`), avec une relecture obligatoire des chiffres et du mot.
 - **v32** : mot du guide moins alarmiste. Deuxième essai réel : fond juste, ton trop fort. Quatre intentions au lieu de trois : « vigilance » (rare, orange, seulement si l'essentiel du pas n'est pas respecté ou vrai signal), « ajuster » (réglage de coach, affichage normal), « orienter », « encourager ». Le message ouvre sur ce qui a marché. Volet mental : un outil concret quand le mot de la personne l'appelle. Feu de camp : nouvelle étape « La tête » qui relit les mots de la zone.
+
+- **v33** : comparaison avec un programme trail écrit à la main. Détail d'un bloc structuré (mise en route, cœur chiffré, seuil d'action, fin), fin du plafond de 20 min par sentier, zones cardio dans Moi, suivi de l'échéance, bilan de palier, étape « Face à l'enjeu » au feu de camp (créneau long ou objectif de secours), sentiers de la carte posés sur les chemins de la photo.
 
 ## 8. Brancher le guide (première installation)
 
