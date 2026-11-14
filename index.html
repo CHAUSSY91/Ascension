@@ -301,6 +301,11 @@ SUIVI DE L'ÉCHÉANCE
 - Marge positive et retard de moins de 14 jours : n'en parle pas.
 - Retard de 14 jours ou plus, ou marge négative : dis-le simplement, sans reproche, dans le "message" du palier suivant puis au feu de camp, et propose comment tenir l'échéance sans brûler d'étape : resserrer les paliers restants, regrouper deux paliers proches, ou revoir la durée des étapes suivantes. Ne double jamais la charge pour rattraper. Si l'échéance n'est plus tenable, dis-le franchement au feu de camp.
 
+LA TRAME
+- Si "trame_du_programme" figure dans les données, c'est le programme d'ensemble convenu avec la personne jusqu'au sommet. Chaque palier la suit : repère la ligne qui correspond au palier, puis ajuste aux ressentis, aux mesures et aux bilans. La trame guide, elle ne fige pas.
+- Si tu t'en écartes (signal de fatigue, retard, niveau réel différent, temps disponible), dis-le en une phrase dans "progression".
+- La trame ne passe jamais avant le temps disponible ni avant les règles de sécurité.
+
 QUAND C'EST TROP DUR : ADAPTER, JAMAIS NIVELER VERS LE BAS
 - Le but est de réussir. Quand un exercice ou un palier est trop dur (ressentis « Très dur » ou « Dur », mesure loin de la cible, exercice non tenu), ne baisse jamais l'objectif : découpe le chemin qui y mène.
 - Ajoute des exercices intermédiaires qui préparent le même geste ou la même capacité, du plus accessible au plus proche de la cible, puis termine par une tentative au maximum sur l'exercice visé pour mesurer le progrès. Exemple : 10 tractions non réussies → tractions australiennes, descentes contrôlées, suspension active, puis « fais ton maximum de tractions ». En endurance : fractionner la durée cible ou alterner marche et course à l'allure visée, puis une tentative sur la durée cible. Pour le mental ou l'apprentissage : même logique, une version plus simple du même exercice, puis l'exercice visé.
@@ -385,6 +390,14 @@ const FEEL = ["Très dur","Dur","Correct","Bien","Facile"];
 
 /* ---------- nom du guide ---------- */
 const NAMEK="ascension-guide";
+/* ---------- mode du guide (v34) : guide intégré (clé) ou Claude par copier-coller ---------- */
+const MODEK="ascension-mode", BLOCK="ascension-blocs";
+let memMode=null, memBlocs=null;
+function getMode(){ try{ return JSON.parse(localStorage.getItem(MODEK)||"null")||{}; }catch(e){ return memMode||{}; } }
+function setMode(v){ try{ localStorage.setItem(MODEK,JSON.stringify(v)); }catch(e){ memMode=v; } }
+const claudeMode = () => getMode().mode==="claude";
+function getBlocs(){ try{ return JSON.parse(localStorage.getItem(BLOCK)||"null")||{}; }catch(e){ return memBlocs||{}; } }
+function setBlocs(v){ try{ localStorage.setItem(BLOCK,JSON.stringify(v)); }catch(e){ memBlocs=v; } }
 function guideName(){ try{ return JSON.parse(localStorage.getItem(NAMEK)||"null"); }catch(e){ return null; } }
 function setGuideName(v){ try{ localStorage.setItem(NAMEK, JSON.stringify(v)); }catch(e){} }
 function withName(text){ const g=guideName(); return (g?.name ? `Tu t'appelles ${g.name}. Garde toujours ce prénom.\n\n` : "Ne te donne pas de prénom.\n\n") + text; }
@@ -551,7 +564,7 @@ function planHTML(z){
 }
 function openPlan(z){
   const P=isV2()?palList(z)[curPalIdx(z)]:S.plan?.[z];
-  $("#plan").innerHTML=`<div class="pl-bar noprint"><button type="button" class="x" data-a="closePlan" aria-label="Fermer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button type="button" class="btn small" data-a="printPlan">Télécharger en PDF</button>${getKey()?.key?`<button type="button" class="btn small line" data-a="reorgPlan">Réorganiser ma semaine</button>`:""}</div>${P?planHTML(z):`<p style="padding:20px">Pas encore de planning.</p>`}`;
+  $("#plan").innerHTML=`<div class="pl-bar noprint"><button type="button" class="x" data-a="closePlan" aria-label="Fermer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button type="button" class="btn small" data-a="printPlan">Télécharger en PDF</button>${getKey()?.key||claudeMode()?`<button type="button" class="btn small line" data-a="reorgPlan">Réorganiser ma semaine</button>`:""}</div>${P?planHTML(z):`<p style="padding:20px">Pas encore de planning.</p>`}`;
   $("#plan").hidden=false; $("#plan").scrollTop=0;
 }
 function todayPlanHTML(){
@@ -597,7 +610,7 @@ function buildFromDiag(j){
   const prev = S && S.massif && !fromPlacement ? (S.archives||[]).concat([{massif:S.massif.nom, cap:S.massif.cap, fin:today()}]) : (S?.archives||[]);
   const keepJournal = fromPlacement ? S.journal : [];
   const keepPlacement = fromPlacement ? S.placement : null;
-  const profil = S?.profil, prevVoie = S?.massif?.voie, prevEchDate = S?.massif?.echeanceDate;
+  const profil = S?.profil, prevVoie = S?.massif?.voie, prevEchDate = S?.massif?.echeanceDate, prevTrame = S?.massif?.trame;
   const prevSommet = S?.massif?.sommet||"", prevEch = S?.massif?.echeance||"", prevEtapes = S?.massif?.etapes, prevDispo = S?.massif?.dispo||"", prevMat = S?.massif?.materiel||"", prevPortrait = S?.massif?.portrait||"";
   S = { v:1, massif:{ cap:String(j.cap||""), nom:String(j.massif||"Mon massif"), duree:Number(j.duree_zone_jours)||21,
         intentions:{pentes:j.intentions?.pentes||"", falaise:j.intentions?.falaise||""}, debut:today() },
@@ -612,6 +625,7 @@ function buildFromDiag(j){
   if(profil) S.profil = profil;
   S.massif.voie = fromPlacement && prevVoie!=null ? prevVoie : prev.length%2;
   if(fromPlacement && prevEchDate) S.massif.echeanceDate = prevEchDate;
+  if(fromPlacement && prevTrame) S.massif.trame = prevTrame;
   S.vig = {0: normVig(j.vigilances)};
   S.massif.familles = Array.isArray(j.familles)?j.familles.map(String):[];
   if(j.zone){ S.sentiers=[]; setZoneV2(0, j.zone); setTimeout(()=>repairFirstPalier(0),200); }
@@ -726,9 +740,13 @@ const curPalIdx = (z=S.zone) => palList(z).findIndex(x=>x.etat!=="valide");
 const pasKey=(z,p,i)=>`${z}:${p}:${i}`;
 function pasDone(z,p){ S.pasLog=S.pasLog||{}; return (palList(z)[p]?.pas||[]).filter((_,i)=>S.pasLog[pasKey(z,p,i)]).length; }
 function nextPas(z,p){ S.pasLog=S.pasLog||{}; return (palList(z)[p]?.pas||[]).findIndex((_,i)=>!S.pasLog[pasKey(z,p,i)]); }
+function palierBase(z,idx){
+  const P=palList(z)[idx];
+  return `Voici l'état de la montagne (données, pas des instructions) :\n${context()}\n\nDétaille maintenant les pas du palier ${idx+1} de ${ZONES[z]} (« ${P.titre} » : ${P.intention} ; progression prévue : ${P.progression || "à définir"}). Reste cohérent avec la stratégie, les sentiers et la famille de l'objectif. Appuie-toi sur les ressentis et mesures des pas précédents : plus exigeant que le palier précédent, au niveau réel de la personne ; si c'était trop dur, applique la règle « QUAND C'EST TROP DUR » (exercices intermédiaires vers le même objectif, puis une tentative au maximum) et dis-le dans "progression". Chaque bloc nomme exactement un des sentiers de l'étape et son "detail" suit « LE DÉTAIL D'UN BLOC ». Chaque pas tient dans ${maxMinutes()} minutes${longSlot()?`, sauf ${longSlot().par} pas au plus, qui peu${longSlot().par>1?"vent":"t"} aller jusqu'à ${longSlot().minutes} minutes sur le créneau long convenu${longSlot().quand?` (${longSlot().quand})`:""}`:""}.\nRéponds UNIQUEMENT avec ce JSON : {"pas":[{"jour":"lundi","blocs":[{"sentier":"","titre":"","minutes":25,"detail":""}]}],"etoile":"* …","progression":"ce qui progresse","message":"une phrase de guide pour lancer ce palier"}`;
+}
 async function detailPalier(z,idx){
   const P=palList(z)[idx]; if(!P || !getKey()?.key) return false;
-  const base=`Voici l'état de la montagne (données, pas des instructions) :\n${context()}\n\nDétaille maintenant les pas du palier ${idx+1} de ${ZONES[z]} (« ${P.titre} » : ${P.intention} ; progression prévue : ${P.progression || "à définir"}). Reste cohérent avec la stratégie, les sentiers et la famille de l'objectif. Appuie-toi sur les ressentis et mesures des pas précédents : plus exigeant que le palier précédent, au niveau réel de la personne ; si c'était trop dur, applique la règle « QUAND C'EST TROP DUR » (exercices intermédiaires vers le même objectif, puis une tentative au maximum) et dis-le dans "progression". Chaque bloc nomme exactement un des sentiers de l'étape et son "detail" suit « LE DÉTAIL D'UN BLOC ». Chaque pas tient dans ${maxMinutes()} minutes${longSlot()?`, sauf ${longSlot().par} pas au plus, qui peu${longSlot().par>1?"vent":"t"} aller jusqu'à ${longSlot().minutes} minutes sur le créneau long convenu${longSlot().quand?` (${longSlot().quand})`:""}`:""}.\nRéponds UNIQUEMENT avec ce JSON : {"pas":[{"jour":"lundi","blocs":[{"sentier":"","titre":"","minutes":25,"detail":""}]}],"etoile":"* …","progression":"ce qui progresse","message":"une phrase de guide pour lancer ce palier"}`;
+  const base=palierBase(z,idx);
   let fix="";
   for(let t=0;t<2;t++){
     const out=await callGuide([{role:"user",content:base+fix}], withName(CORE)+"\n\nTu produis uniquement du JSON strictement valide.", 3500);
@@ -772,7 +790,7 @@ function context(){
   const z=S.zone;
   return JSON.stringify({
     sommet:S.massif.sommet||S.massif.cap, echeance:S.massif.echeance||"", pourquoi:S.massif.cap, temps_disponible:S.massif.dispo||"", materiel_et_moyens:S.massif.materiel||"", portrait:S.massif.portrait||"", vigilances_actuelles:(S.vig?.[Math.min(z,2)]||[]), massif:S.massif.nom,
-    creneau_long: longSlot() ? {minutes:longSlot().minutes, pas_par_palier:longSlot().par, quand:longSlot().quand} : undefined, objectif_de_secours:S.massif.secours||undefined, zones_cardio:fcContext(), suivi_echeance:suiviContext(),
+    creneau_long: longSlot() ? {minutes:longSlot().minutes, pas_par_palier:longSlot().par, quand:longSlot().quand} : undefined, objectif_de_secours:S.massif.secours||undefined, zones_cardio:fcContext(), suivi_echeance:suiviContext(), trame_du_programme:trameTxt()||undefined,
     etapes:(S.massif.etapes||[]).map((e,i)=>({zone:ZONES[i],objectif:e.objectif,jours:e.jours})),
     zone_actuelle:ZONES[Math.min(z,3)], objectif_de_la_zone:zoneObj(z), jour_de_zone:diff(S.zoneDebut,today())+1, duree_zone_jours:S.massif.duree,
     sentiers:S.sentiers.map(s=>({nom:s.nom, statut:s.statut, pourquoi:s.pourquoi, seuil_suffisance:s.seuil,
@@ -1068,9 +1086,10 @@ function actionBar(){
 function vOnboard(){
   return `<div class="hero"><div class="in"><h1>Une montagne se grimpe pas à pas.</h1><p class="muted">Pas de raccourci, pas de sprint. Choisis une compétence, ton guide construit la montagne avec toi, et tu la gravis une épreuve à la fois.</p></div></div>
 <div class="page">
-${getKey()?.key?`<button type="button" class="btn wide" data-a="chat" data-k="diag">${C?.kind==="diag"?"Reprendre le diagnostic avec mon guide":"Commencer avec mon guide"}</button>${C?`<button type="button" class="btn ghost wide" data-a="resetAll">Recommencer le diagnostic à zéro</button>`:""}`:`<button type="button" class="btn wide" data-a="keySheet">Brancher mon guide dans l’app</button>`}
+${getKey()?.key?`<button type="button" class="btn wide" data-a="chat" data-k="diag">${C?.kind==="diag"?"Reprendre le diagnostic avec mon guide":"Commencer avec mon guide"}</button>${C?`<button type="button" class="btn ghost wide" data-a="resetAll">Recommencer le diagnostic à zéro</button>`:""}`:claudeMode()?"":`<button type="button" class="btn wide" data-a="keySheet">Brancher mon guide dans l’app</button>`}
 ${getKey()?.key?`<button type="button" class="btn ghost wide" data-a="keySheet">Réglages du guide (modèle, clé)</button>`:""}
-<button type="button" class="btn ghost wide" data-a="secours">Mode secours, sans guide intégré</button>
+${claudeMode()?`<button type="button" class="btn wide" data-a="secours">Commencer avec Claude</button><button type="button" class="btn ghost wide" data-a="projetSheet">Préparer mon projet Claude</button><button type="button" class="btn ghost wide" data-a="modeGuide">Revenir au guide intégré</button>`:`<button type="button" class="btn ghost wide" data-a="modeClaude">Passer par Claude, en copier-coller</button>
+<button type="button" class="btn ghost wide" data-a="secours">Mode secours, sans guide intégré</button>`}
 <button type="button" class="btn ghost wide" data-a="import">J’ai une sauvegarde</button>
 </div>`;
 }
@@ -1361,7 +1380,8 @@ ${z?`<div class="list">${z.z.map((x,i)=>`<div class="fond"><span>${x[0]}</span><
 <p class="muted" style="font-size:14px">Date du sommet : ${e?`${e.approx?"vers le ":""}${fmtY(e.date)}${e.approx?" (jour exact à préciser)":""}`:"non renseignée"}.</p>
 <p class="muted" style="font-size:14px">Temps disponible : ${esc(S.massif.dispo||"non renseigné")}.${lg?` Créneau long convenu au feu de camp : ${lg.minutes} min, ${lg.par} fois par palier${lg.quand?`, ${esc(lg.quand)}`:""}.`:""}</p>
 ${S.massif.secours?`<p class="muted" style="font-size:14px">Objectif de secours : ${esc(S.massif.secours)}.</p>`:""}
-<button type="button" class="btn ghost" data-a="reperes" style="align-self:flex-start">${z?"Modifier mes repères":"Renseigner mes repères"}</button></section>`;
+<p class="muted" style="font-size:14px">Trame du programme : ${S.massif.trame?`${S.massif.trame.lignes.length} lignes, ${S.massif.trame.vue==="tout"?"visible dans la fiche du sommet":"gardée en coulisse (pas à pas)"}`:"aucune"}.</p>
+<div class="row"><button type="button" class="btn ghost" data-a="reperes">${z?"Modifier mes repères":"Renseigner mes repères"}</button>${S.phase!=="placement"&&!S.sommet?`<button type="button" class="btn ghost" data-a="trameSheet">${S.massif.trame?"Changer la trame":"Ajouter une trame"}</button>`:""}${S.massif.trame?`<button type="button" class="btn ghost" data-a="trameVue">${S.massif.trame.vue==="tout"?"Masquer le chemin":"Voir tout le chemin"}</button>`:""}</div></section>`;
 }
 const FLD='style="background:var(--ink-3);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%"';
 function sheetReperes(){
@@ -1378,9 +1398,10 @@ function vMoi(){
   const done=S.sentiers.reduce((n,s)=>n+s.epreuves.filter(e=>e.etat==="validee").length,0);
   return `<div class="page"><div><h1>${esc(S.massif.nom)}</h1><p class="why">${esc(S.massif.cap)}</p></div>
 <p>${done} épreuve${done>1?"s":""} validée${done>1?"s":""} depuis le ${fmt(S.massif.debut)}.</p>
-<section class="card"><h3>Ton guide${guideName()?.name?`, ${esc(guideName().name)}`:""}</h3><button type="button" class="btn ghost small" data-a="nameSheet" style="align-self:flex-start">${guideName()?.name?"Changer son nom":"Lui donner un nom"}</button><p class="muted">${getKey()?.key?`Branché dans l’app (${esc((MODELS.find(m=>m[0]===getKey().model)||MODELS[0])[1])}).`:"Pas encore branché : tu passes par le copier-coller."}</p><button type="button" class="btn ${getKey()?.key?"ghost":""}" data-a="keySheet">${getKey()?.key?"Modifier":"Brancher mon guide"}</button></section>
+<section class="card"><h3>Ton guide${guideName()?.name?`, ${esc(guideName().name)}`:""}</h3><button type="button" class="btn ghost small" data-a="nameSheet" style="align-self:flex-start">${guideName()?.name?"Changer son nom":"Lui donner un nom"}</button>${claudeMode()?`<p class="muted">Mode Claude : à chaque étape, tu copies la demande, tu en parles avec Claude, puis tu colles ses blocs ici. Le mot du guide après chaque pas est en pause.</p><p class="muted" style="font-size:14px">${getMode().projet?"Projet Claude : activé. Les demandes sont courtes, tes consignes de guide restent dans le projet.":"Sans projet Claude : chaque demande contient toutes les consignes du guide."}</p><div class="row"><button type="button" class="btn ghost" data-a="projetSheet">Mon projet Claude</button><button type="button" class="btn ghost" data-a="modeGuide">Revenir au guide intégré</button></div>`
+:`<p class="muted">${getKey()?.key?`Branché dans l’app (${esc((MODELS.find(m=>m[0]===getKey().model)||MODELS[0])[1])}).`:"Pas encore branché : tu passes par le copier-coller."}</p><div class="row"><button type="button" class="btn ${getKey()?.key?"ghost":""}" data-a="keySheet">${getKey()?.key?"Modifier":"Brancher mon guide"}</button><button type="button" class="btn ghost" data-a="modeClaude">Passer par Claude</button></div>`}</section>
 ${reperesCard()}
-<section class="card"><h3>Mode secours</h3><p class="muted">Si ton guide intégré ne répond plus : diagnostic par copier-coller avec n’importe quelle IA.</p><button type="button" class="btn ghost" data-a="secours" style="align-self:flex-start">Ouvrir le mode secours</button></section>
+${claudeMode()?"":`<section class="card"><h3>Mode secours</h3><p class="muted">Si ton guide intégré ne répond plus : diagnostic par copier-coller avec n’importe quelle IA.</p><button type="button" class="btn ghost" data-a="secours" style="align-self:flex-start">Ouvrir le mode secours</button></section>`}
 <section class="card"><h3>Rappel du soir</h3><p class="muted">Ajoute un rappel quotidien à ton agenda pour cocher ta journée et choisir l’épreuve de demain.</p>
 <label for="rt" class="muted" style="font-size:13.5px">Heure du rappel</label><input type="time" id="rt" value="21:30"><button type="button" class="btn" data-a="ics">Ajouter à mon agenda</button></section>
 <section class="card"><h3>Sauvegarde</h3><p class="muted">Tes données restent sur ce téléphone. Exporte-les de temps en temps pour ne rien perdre.</p>
@@ -1423,7 +1444,7 @@ function sheetZone(id){
   const z=Number(id);
   if(z===3){
     return openSheet(head("Le sommet",S.sommet?"Atteint":(S.massif.echeance?`Échéance : ${S.massif.echeance}`:"Au bout des trois étapes"))+scene(4,"Drapeau français au sommet sous la Voie lactée")+
-      `<p class="trail">Ton objectif final</p><h3>${esc(S.massif.sommet||S.massif.cap)}</h3>${S.massif.sommet&&S.massif.cap?`<p class="why">${esc(S.massif.cap)}</p>`:""}${(S.massif.etapes||[]).some(e=>e?.objectif)?`<p class="trail">Les étapes pour y arriver</p>`:""}${(S.massif.etapes||[]).filter(e=>e?.objectif).length?`<div class="list">${S.massif.etapes.map((e,i)=>e?.objectif?`<div class="ep"><span class="m ${i<S.zone||S.sommet?"validee":i===S.zone&&S.phase!=="placement"?"active":"verrouillee"}"></span><div><strong style="font-weight:500">${ZONE_T[i]} : ${esc(e.objectif)}</strong><br><span class="muted" style="font-size:13.5px">${e.jours} jours prévus</span></div></div>`:"").join("")}</div>`:""}${S.massif.secours&&!S.sommet?`<p class="why" style="font-size:14px">Objectif de secours, convenu au feu de camp : ${esc(S.massif.secours)}</p>`:""}${suiviTxt()?`<p class="muted" style="font-size:14px">${esc(suiviTxt().replace(/^./,c=>c.toUpperCase()))}. Feu de camp au rythme actuel : ${fmt(suivi().proj)}${suivi().sommetProj?`, sommet vers le ${fmtY(suivi().sommetProj)}`:""}.</p>`:""}<p>${S.sommet?esc(S.journal.filter(j=>j.type==="sommet").pop()?.texte||"Tu y es."):"Au sommet, ton guide fait le bilan complet du massif : ce que tu as acquis, ce qui tient tout seul, ce qui demande encore de l’entretien. Puis tu choisis ton prochain massif, en lien ou non avec celui-ci."}</p>`);
+      `<p class="trail">Ton objectif final</p><h3>${esc(S.massif.sommet||S.massif.cap)}</h3>${S.massif.sommet&&S.massif.cap?`<p class="why">${esc(S.massif.cap)}</p>`:""}${(S.massif.etapes||[]).some(e=>e?.objectif)?`<p class="trail">Les étapes pour y arriver</p>`:""}${(S.massif.etapes||[]).filter(e=>e?.objectif).length?`<div class="list">${S.massif.etapes.map((e,i)=>e?.objectif?`<div class="ep"><span class="m ${i<S.zone||S.sommet?"validee":i===S.zone&&S.phase!=="placement"?"active":"verrouillee"}"></span><div><strong style="font-weight:500">${ZONE_T[i]} : ${esc(e.objectif)}</strong><br><span class="muted" style="font-size:13.5px">${e.jours} jours prévus</span></div></div>`:"").join("")}</div>`:""}${S.massif.secours&&!S.sommet?`<p class="why" style="font-size:14px">Objectif de secours, convenu au feu de camp : ${esc(S.massif.secours)}</p>`:""}${suiviTxt()?`<p class="muted" style="font-size:14px">${esc(suiviTxt().replace(/^./,c=>c.toUpperCase()))}. Feu de camp au rythme actuel : ${fmt(suivi().proj)}${suivi().sommetProj?`, sommet vers le ${fmtY(suivi().sommetProj)}`:""}.</p>`:""}${S.massif.trame?.vue==="tout"&&!S.sommet?`<section><p class="trail">Tout le chemin</p>${trameHTML()}</section>`:""}<p>${S.sommet?esc(S.journal.filter(j=>j.type==="sommet").pop()?.texte||"Tu y es."):"Au sommet, ton guide fait le bilan complet du massif : ce que tu as acquis, ce qui tient tout seul, ce qui demande encore de l’entretien. Puis tu choisis ton prochain massif, en lien ou non avec celui-ci."}</p>`);
   }
   const st = z<S.zone||S.sommet ? "Passée" : z===S.zone && S.phase!=="placement" ? "En cours" : "À venir";
   const zo = zoneObj(z), zd = S.massif.etapes?.[z]?.jours;
@@ -1484,7 +1505,7 @@ const KEYK="ascension-key", CHATK="ascension-chat";
 const MODELS=[["gemini-flash-latest","Gemini Flash, gratuit, recommandé"],["gemini-flash-lite-latest","Gemini Flash-Lite, gratuit, plus rapide"],["mistral-large-latest","Mistral Large (relais)"],["mistral-medium-latest","Mistral Medium (relais)"],["mistral-small-latest","Mistral Small (relais)"]];
 const isGemini = m => String(m||"").startsWith("gemini");
 let memKey=null, memChat=null;
-function getKey(){ try{ return JSON.parse(localStorage.getItem(KEYK)||"null"); }catch(e){ return memKey; } }
+function getKey(raw){ if(!raw && claudeMode()) return null; try{ return JSON.parse(localStorage.getItem(KEYK)||"null"); }catch(e){ return memKey; } }
 function setKey(v){ try{ v?localStorage.setItem(KEYK,JSON.stringify(v)):localStorage.removeItem(KEYK); }catch(e){ memKey=v; } }
 function getChat(){ try{ return JSON.parse(localStorage.getItem(CHATK)||"null"); }catch(e){ return memChat; } }
 function setChat(v){ try{ v?localStorage.setItem(CHATK,JSON.stringify(v)):localStorage.removeItem(CHATK); }catch(e){ memChat=v; } }
@@ -1655,6 +1676,173 @@ ${!UI.busy && !C.msgs.some(m=>m.result && !m.applied) && C.msgs.filter(m=>m.role
   const m=$("#msgs"); m.scrollTop=m.scrollHeight;
   const ta=$("#cmsg"); ta.addEventListener("input",()=>{ draft=ta.value; ta.style.height="auto"; ta.style.height=Math.min(ta.scrollHeight,140)+"px"; });
 }
+/* ---------- relais Claude (v34) : demandes à copier, blocs à coller ---------- */
+const TRAME_RULES=`Règles de la trame : le bloc est {"bloc":"trame","vue":"pas_a_pas","lignes":["La forêt","S1 : …","S2 : …","Les pentes","S7 : …"]}. Une ligne par semaine ou par palier, 140 caractères au plus, qui dit ce qui progresse et la séance clé ; une ligne de titre par étape (La forêt, Les pentes, La falaise, Vers le sommet) ; 70 lignes au plus. Si la personne arrive avec un programme existant (coach, club, livre, autre conversation), pars de lui et dis franchement ce que tu adaptes à son niveau, à son échéance et à son temps disponible. Avant d'écrire la trame, pose cette question : « Veux-tu voir tout le chemin jusqu'au sommet, ou le découvrir pas à pas ? Voir tout le chemin d'un coup peut décourager : pas à pas, c'est souvent mieux. » Sa réponse donne "vue" : "tout" ou "pas_a_pas".`;
+const RELAIS=`
+
+CADRE : TU ES UTILISÉ HORS DE L'APP, PAR COPIER-COLLER
+- La personne discute avec toi ici, puis recopie tes blocs dans l'app Ascension. Chaque demande de l'app est autonome et contient l'état à jour de la montagne : fie-toi à cet état plutôt qu'à tes souvenirs.
+- Aucun message d'ouverture n'a été envoyé par l'app : pour un diagnostic, commence toi-même par deux phrases de présentation, la phrase de prudence (« Je ne suis pas médecin : si quelque chose cloche dans ton corps, consulte. ») et ta première question. Pour les autres demandes, entre directement dans la mission.
+- Pendant la conversation : texte simple, une question à la fois, messages courts, lisibles sur un téléphone. Tu peux prendre le nombre d'échanges qu'il faut.
+- Quand la mission demande de terminer par un bloc JSON, donne à la place un ou plusieurs BLOCS, chacun dans son propre encadré de code, pour que la personne copie chaque bloc d'un seul appui. Chaque bloc est un objet JSON strictement valide dont le premier champ est "bloc". Guillemets droits, aucun commentaire, aucune virgule en trop.
+- Juste avant les encadrés, annonce en une ligne combien il y a de blocs et dans quel ordre les coller. N'écris rien après le dernier encadré.
+- Le découpage, selon la mission (les champs sont ceux du JSON demandé par la mission, répartis ainsi) :
+  1. Tests de placement : {"bloc":"perso","cap":"","sommet":"","echeance":"","date_sommet":"","premiere_etape":"","disponibilite":"","materiel":"","portrait":"","massif":"","fc_repos":0,"fc_max":0,"fc_max_mesuree":false} puis {"bloc":"camp","tests":[ÉPREUVE]}. Dis ensuite à la personne de faire ses tests, de les noter dans l'app, puis de revenir avec la demande « Retourner au guide ».
+  2. Construction de la montagne : {"bloc":"sommet","cap":"","sommet":"","echeance":"","massif":"","familles":[],"vigilances":[],"etapes":[]} puis {"bloc":"foret","zone":ZONE_JSON} puis {"bloc":"trame", …}.
+  3. Feu de camp : {"bloc":"feu","bilan":"","vigilances":[],"etapes":[],"creneau_long":{},"sommet_secours":"","disponibilite":""} puis {"bloc":"pentes","zone":ZONE_JSON} ou {"bloc":"falaise","zone":ZONE_JSON} selon l'étape qui s'ouvre. Au dernier feu de camp (le sommet), un seul bloc "feu" avec les champs demandés par la mission.
+  4. Détail d'un palier : {"bloc":"palier","pas":[],"etoile":"","progression":"","message":""}.
+  5. Réorganisation de la semaine, halte, bivouac : un seul bloc, le JSON demandé par la mission, avec "bloc":"semaine", "bloc":"halte" ou "bloc":"bivouac" en premier champ.
+- "date_sommet" : la date exacte au format AAAA-MM-JJ si la personne la connaît, sinon "". "fc_repos" et "fc_max" : seulement si elle te les donne, sinon 0. "fc_max_mesuree" : true si elle l'a mesurée sur un effort maximal.
+- ÉPREUVE est le format d'une épreuve décrit dans tes consignes ; pour un test de placement, type conseillé : seuil ou unique.
+- ZONE_JSON est le format d'une étape décrit dans tes consignes. Chaque bloc d'un pas nomme exactement un des sentiers du même ZONE_JSON.
+- LA TRAME : quand tu construis la montagne, écris aussi le programme d'ensemble jusqu'au sommet. ${TRAME_RULES}
+- Si la personne colle un message d'erreur de l'app, corrige uniquement le bloc concerné et redonne-le en entier, dans un encadré de code.`;
+const BLOC_T={perso:"Perso",camp:"Camp de base",sommet:"Sommet",foret:"Forêt",pentes:"Pentes",falaise:"Falaise",feu:"Feu de camp",palier:"Palier",trame:"Trame",semaine:"Semaine",halte:"Halte",bivouac:"Bivouac"};
+const BLOC_ALIAS={perso:"perso",profil:"perso",personnel:"perso",camp:"camp",camp_de_base:"camp","camp de base":"camp",placement:"camp",sommet:"sommet",foret:"foret","forêt":"foret","la forêt":"foret",pentes:"pentes","les pentes":"pentes",falaise:"falaise","la falaise":"falaise",feu:"feu",feu_de_camp:"feu","feu de camp":"feu",palier:"palier",trame:"trame",semaine:"semaine",plan:"semaine",halte:"halte",bivouac:"bivouac"};
+const dateFR = () => new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+function forClaude(text){
+  const pj=!!getMode().projet; let t=String(text);
+  if(pj && t.includes(CORE)) t="DEMANDE DE L'APP ASCENSION (tes consignes de guide sont dans les instructions du projet)\n\n"+t.replace(CORE,"").trim();
+  return withName(t)+(pj?"":RELAIS)+`\n\nNous sommes le ${dateFR()}.`;
+}
+const projetText = () => withName(CORE)+RELAIS+`\n\nCe texte est l'instruction permanente du projet. Chaque message « DEMANDE DE L'APP ASCENSION » t'apporte la mission du moment et l'état à jour de la montagne.`;
+function fixJSON(raw){
+  let o="", str=false, e=false;
+  for(const c of raw){
+    if(str){ if(e){ e=false; o+=c; } else if(c==="\\"){ e=true; o+=c; } else if(c==='"'){ str=false; o+=c; } else if(c==="\n") o+="\\n"; else if(c==="\r"||c==="\t") o+=" "; else o+=c; }
+    else { if(c==='"') str=true; o+=c; }
+  }
+  return o.replace(/,(\s*[}\]])/g,"$1");
+}
+function readObjects(txt){
+  const t=String(txt||""), out=[]; let depth=0, start=-1, str=false, e=false;
+  for(let i=0;i<t.length;i++){ const c=t[i];
+    if(str){ if(e) e=false; else if(c==="\\") e=true; else if(c==='"') str=false; continue; }
+    if(c==='"'){ if(depth>0) str=true; continue; }
+    if(c==="{"){ if(depth===0) start=i; depth++; }
+    else if(c==="}" && depth>0){ depth--; if(depth===0){ const raw=t.slice(start,i+1); try{ out.push(JSON.parse(raw)); }catch(x){ try{ out.push(JSON.parse(fixJSON(raw))); }catch(y){ out.push({_bad:true}); } } } }
+  }
+  if(depth>0) out.push({_bad:true});
+  return out;
+}
+function trameTxt(){ const l=S?.massif?.trame?.lignes; return Array.isArray(l)&&l.length ? l.join("\n").slice(0,9000) : ""; }
+function normTrame(j){
+  const src=Array.isArray(j?.lignes)?j.lignes:String(j?.texte||"").split("\n");
+  const lignes=src.map(x=>String(x||"").trim()).filter(Boolean).slice(0,90).map(x=>x.slice(0,220));
+  if(!lignes.length) throw new Error("La trame est vide.");
+  return {lignes, vue:/tout/i.test(String(j?.vue||""))?"tout":"pas_a_pas", date:today()};
+}
+function trameHTML(){ return (S.massif.trame?.lignes||[]).map(l=>/^[^:]{1,28}$/.test(l)?`<p class="trail" style="margin:10px 0 2px">${esc(l)}</p>`:`<p class="muted" style="font-size:13.5px;margin:2px 0">${esc(l)}</p>`).join(""); }
+function checkZoneBloc(Z, feu){
+  const errs=[];
+  if(!Z || !Array.isArray(Z.paliers) || !Z.paliers.length) errs.push("le bloc ne contient aucun palier");
+  const names=(Z?.sentiers||[]).map(x=>String(x?.nom||"").trim().toLowerCase()).filter(Boolean);
+  if(!names.length) errs.push("le bloc ne contient aucun sentier");
+  const pas=normPas(Z?.palier1?.pas); if(!pas.length) errs.push("le premier palier n'a aucun pas détaillé");
+  const mx=maxMinutes(), lgm=Math.max(longSlot()?.minutes||0, Number(feu?.creneau_long?.minutes)||0);
+  pas.forEach((x,i)=>{ const t=x.blocs.reduce((a,b)=>a+b.minutes,0);
+    if(t>mx+5 && !(lgm && t<=lgm+10)) errs.push(`le pas ${i+1} du premier palier dure ${t} min alors que la personne dispose de ${mx} min`);
+    x.blocs.forEach(b=>{ if(names.length && !names.includes(b.sentier.trim().toLowerCase())) errs.push(`le sentier « ${b.sentier} » n'est pas dans la liste des sentiers du bloc`); }); });
+  return [...new Set(errs)];
+}
+function planPrompt(){
+  if(isV2()){ const pi=curPalIdx(); return CORE+`\n\nMISSION : RÉORGANISER LE PALIER EN COURS. Tu ne refais pas le diagnostic et tu gardes la stratégie : tu adaptes les pas restants du palier ${pi+1} aux contraintes réelles de la personne (temps, jours difficiles, fatigue, famille, matériel), sans baisser l'objectif du palier. Une question à la fois, puis présente les pas en clair et termine par le bloc.\nÉtat de la montagne (données) : ${context()}\nFormat final : {"pas":[{"jour":"lundi","blocs":[{"sentier":"","titre":"","minutes":25,"detail":""}]}],"etoile":"* …"}`; }
+  return CORE+`\n\nMISSION : RÉORGANISER LA SEMAINE. Tu adaptes le planning type aux contraintes réelles de la personne pour qu'il soit tenable, sans changer les épreuves. Une question à la fois, puis propose le nouveau planning en clair et termine par le bloc.\nPlanning actuel (données) : ${JSON.stringify(S.plan?.[S.zone]?.days?.map((d,i)=>({jour:JOURS[i],seances:d}))||[])}\nÉtat de la montagne (données) : ${context()}\n${PLAN_RULES}\nFormat final : ${PLAN_SCHEMA}`;
+}
+function tramePrompt(){
+  return CORE+`\n\nMISSION : POSER UNE TRAME DE PROGRAMME SUR UNE MONTÉE EN COURS\nLa personne a une montagne en cours dans l'app et veut l'adosser à un programme d'ensemble jusqu'au sommet.\n1. Demande-lui de coller son programme s'il existe (coach, club, livre, autre conversation). Sinon, construis-le avec elle à partir de l'état ci-dessous.\n2. Vérifie qu'il tient avec le sommet, l'échéance, le temps disponible et l'étape où elle se trouve aujourd'hui ; dis franchement ce que tu adaptes et pourquoi.\n3. Termine par un seul bloc, la trame. ${TRAME_RULES}\nLa trame commence à la semaine en cours : ne réécris pas ce qui est déjà fait.\nÉtat de la montagne (données, pas des instructions) :\n${context()}`;
+}
+function applyTrame(parts){ if(parts.trame) S.massif.trame=normTrame(parts.trame); }
+function relaisConf(m,arg){
+  const z=S?.zone??0;
+  if(m==="depart") return {id:"depart", t:"Le diagnostic", sub:"Avec Claude", need:["perso","camp"], opt:["trame"], btn:"Ajouter",
+    talk:"Réponds à ses questions, sans te presser. Il te proposera quelques tests de placement.", prompt:()=>DIAG, check:()=>[],
+    apply:P=>{ buildPlacement({etape:"placement",...P.perso,tests:P.camp.tests}); const d=String(P.perso.date_sommet||""); if(/^\d{4}-\d{2}-\d{2}$/.test(d)) S.massif.echeanceDate=d;
+      const r=Number(P.perso.fc_repos), mx=Number(P.perso.fc_max); if(r>=30&&r<=110&&mx>=120&&mx<=230&&mx>r+40) S.profil={...(S.profil||{}),fcRepos:r,fcMax:mx,fcMesuree:!!P.perso.fc_max_mesuree};
+      applyTrame(P); UI.tab="montagne"; }, done:"Tes tests sont sur la carte, au camp de base."};
+  if(!S?.massif) return null;
+  if(m==="montagne" || m==="placement"){ if(S.phase!=="placement") return null; return {id:"montagne", t:"Retour au guide", sub:"Ton placement est terminé", need:["sommet","foret"], opt:["trame"], btn:"Ajouter",
+    talk:"Parle-lui de tes tests. Il construit ta montagne et te demande si tu veux voir tout le chemin ou avancer pas à pas.", prompt:()=>promptPlacementBack(), check:P=>checkZoneBloc(P.foret?.zone),
+    apply:P=>{ buildFromDiag({etape:"montagne",...P.sommet,zone:P.foret.zone}); applyTrame(P); UI.tab="montagne"; }, done:"Ta montagne est prête. Premier pas en forêt."}; }
+  if(m==="feu"){ const zk=["pentes","falaise"][z]; return {id:"feu:"+z, t:z===2?"Le sommet":"Le feu de camp", sub:z===2?"Bilan du massif":`Fin de ${ZONES[z]}`, need:z<2&&isV2()?["feu",zk]:["feu"], opt:z<2?["trame"]:[], btn:"Ajouter",
+    talk:"Prends le temps du feu de camp avec lui : le chemin parcouru, la tête, l'échéance, puis la suite.", prompt:()=>promptFeu(), check:P=>z<2&&isV2()?checkZoneBloc(P[zk]?.zone,P.feu):[],
+    apply:P=>{ applyFeu(z<2&&isV2()?{...P.feu,zone:P[zk].zone}:P.feu); applyTrame(P); UI.tab="montagne"; }, done:z===2?"Sommet atteint. Bravo.":`Bienvenue dans ${ZONES[z+1]}.`}; }
+  if(m==="palier"){ const idx=Number(arg), PL=palList(z)[idx]; if(!PL) return null; return {id:`palier:${z}:${idx}`, t:`Palier ${idx+1}`, sub:PL.titre, need:["palier"], opt:[], btn:"Ajouter ce palier",
+    talk:"Il peut te poser une question ou deux, puis il détaille les pas de ce palier.", prompt:()=>CORE+"\n\nMISSION : DÉTAILLER UN PALIER\n"+palierBase(z,idx), check:P=>checkPalier(normPas(P.palier.pas),z),
+    apply:P=>{ const j=P.palier; PL.pas=normPas(j.pas); PL.etoile=String(j.etoile||PL.etoile||""); if(j.progression) PL.progression=String(j.progression); PL.message=String(j.message||""); PL.etat="actif"; PL.debut=PL.debut||today(); UI.tab="jour"; }, done:"Palier prêt. Pas à pas."}; }
+  if(m==="semaine") return {id:"semaine", t:"Ta semaine", sub:"Réorganiser avec Claude", need:["semaine"], opt:[], btn:"Appliquer",
+    talk:"Dis-lui ce qui coince cette semaine : il réorganise les pas qui restent.", prompt:()=>planPrompt(), check:P=>isV2()&&Array.isArray(P.semaine.pas)?checkPalier(normPas(P.semaine.pas),z).filter(e=>!/jamais utilis|aucun bloc|n'apparaît/i.test(e)):[],
+    apply:P=>{ const r=P.semaine;
+      if(isV2()){ if(!Array.isArray(r.pas)) throw new Error("Le bloc ne contient aucun pas."); const pi=curPalIdx(), PL=palList()[pi]; if(!PL) return; const ki=PL.pas.map((_,i)=>i).filter(i=>S.pasLog?.[pasKey(S.zone,pi,i)]); const jj0=pasJours(S.zone,pi); const kept=ki.map(i=>({...PL.pas[i],jour:PL.pas[i].jour||JOURS_MIN[jj0[i]]})); remapPasLog(S.zone,pi,ki); PL.pas=kept.concat(normPas(r.pas)); if(r.etoile) PL.etoile=String(r.etoile); }
+      else { if(!Array.isArray(r.semaine)) throw new Error("Le bloc ne contient aucun planning."); S.plan=S.plan||{}; S.plan[S.zone]=normPlan(r); } }, done:"C’est enregistré."};
+  if(m==="halte"){ if(!S.halte) return null; return {id:"halte", t:"La halte", sub:S.halte.raison||"", need:["halte"], opt:[], btn:"Reprendre la montée", talk:"Fais le point avec lui, sans jugement.", prompt:()=>promptHalte(), check:()=>[], apply:P=>applyHalte(P.halte), done:"C’est reparti, pas à pas."}; }
+  if(m==="bivouac"){ const cs=campState(); if(cs?.kind!=="bivouac") return null; return {id:"bivouac", t:"Le bivouac", sub:"Un sentier est arrivé avant les autres", need:["bivouac"], opt:[], btn:"Enregistrer le bivouac", talk:"Quelques questions, puis il te donne de quoi entretenir ce sentier.", prompt:()=>promptBivouac(cs), check:()=>[], apply:P=>applyBivouac(P.bivouac), done:"Bivouac enregistré."}; }
+  if(m==="trame") return {id:"trame", t:"La trame du programme", sub:"Un fil jusqu’au sommet", need:["trame"], opt:[], btn:"Enregistrer la trame",
+    talk:"Colle-lui ton programme s’il existe, ou construis-le avec lui. Il te demandera si tu veux voir tout le chemin ou avancer pas à pas.", prompt:()=>tramePrompt(), check:()=>[], apply:P=>applyTrame(P), done:"Trame enregistrée. Ton guide la suivra à chaque palier."};
+  return null;
+}
+/* Un objet collé devient un ou plusieurs blocs. Sans champ "bloc" (ancien format), on le range d'après le moment. */
+function classify(o,cf){
+  if(o && typeof o.bloc==="string"){ const k=BLOC_ALIAS[o.bloc.trim().toLowerCase()]; return [[k||o.bloc,o]]; }
+  const m=cf.id.split(":")[0];
+  if(m==="depart" && Array.isArray(o.tests)) return [["perso",o],["camp",{tests:o.tests}]];
+  if(m==="montagne" && o.zone) return [["sommet",o],["foret",{zone:o.zone}]];
+  if(m==="feu") return o.zone ? [["feu",o],[cf.need[1],{zone:o.zone}]] : (o.bilan!==undefined ? [["feu",o]] : (o.strategie||o.paliers ? [[cf.need[1],{zone:o}]] : [["?",o]]));
+  if(m==="palier" && Array.isArray(o.pas)) return [["palier",o]];
+  if(m==="semaine" && (Array.isArray(o.pas)||Array.isArray(o.semaine))) return [["semaine",o]];
+  if(m==="halte" || m==="bivouac") return [[m,o]];
+  if(Array.isArray(o.lignes)) return [["trame",o]];
+  return [["?",o]];
+}
+function relaisList(cf,st){
+  return cf.need.concat(cf.opt).map(k=>{ const ok=!!st.parts?.[k], opt=cf.opt.includes(k);
+    return `<div class="ep"><span class="m ${ok?"validee":"verrouillee"}"></span><div><strong style="font-weight:500">Bloc ${BLOC_T[k]}</strong><br><span class="muted" style="font-size:13px">${ok?"Reçu":opt?"Facultatif":"En attente"}</span></div></div>`; }).join("");
+}
+function sheetRelais(m,arg){
+  const cf=relaisConf(m,arg); if(!cf) return;
+  let st=getBlocs(); if(st.m!==cf.id){ st={m:cf.id,parts:{}}; setBlocs(st); }
+  UI.relais={m,arg};
+  const multi=cf.need.length+cf.opt.length>1;
+  openSheet(head(cf.t,cf.sub)+
+  `<div class="step"><span class="n">1</span><p>Copie la demande et colle-la dans ${getMode().projet?"ton projet Claude":"une conversation avec Claude"}.</p></div>
+  <button type="button" class="btn wide" data-a="relaisCopy">Copier pour Claude</button>
+  <div class="step"><span class="n">2</span><p>${cf.talk}</p></div>
+  <div class="step"><span class="n">3</span><p>Il termine par ${multi?"des blocs, chacun dans un encadré":"un bloc dans un encadré"}. Appuie sur « Copier » dans l’encadré, puis colle ici${multi?", un bloc à la fois ou tous ensemble":""}.</p></div>
+  ${multi?`<div class="list" id="rlist">${relaisList(cf,st)}</div>`:""}
+  <label for="rpaste" class="muted" style="font-size:13.5px">${multi?"Bloc de Claude":"Le bloc de Claude"}</label>
+  <textarea id="rpaste" placeholder='{"bloc": …}'></textarea>
+  <p class="err" id="rerr" role="alert"></p><div id="rfix" class="row"></div>
+  <div class="row"><button type="button" class="btn ghost" data-a="relaisClip">Coller</button><button type="button" class="btn" data-a="relaisAdd">${cf.btn}</button></div>
+  ${m==="halte"?`<button type="button" class="btn ghost wide" data-a="skipHalte">Je reprends sans faire le point</button>`:""}
+  ${m==="trame"&&S.massif.trame?`<button type="button" class="btn ghost wide" data-a="trameDel">Retirer la trame actuelle</button>`:""}`);
+}
+function relaisErr(msg, fix, canForce){
+  $("#rerr").textContent=msg; UI.relaisFix=fix||"";
+  $("#rfix").innerHTML=(fix?`<button type="button" class="btn ghost small" data-a="relaisFix">Copier l’erreur pour Claude</button>`:"")+(canForce?`<button type="button" class="btn ghost small" data-a="relaisForce">Appliquer quand même</button>`:"");
+}
+function relaisAdd(force){
+  const {m,arg}=UI.relais||{}; const cf=relaisConf(m,arg); if(!cf) return;
+  let st=getBlocs(); if(st.m!==cf.id) st={m:cf.id,parts:{}};
+  const all=cf.need.concat(cf.opt), txt=$("#rpaste").value, got=[], unk=[];
+  if(String(txt).trim()){
+    const objs=readObjects(txt);
+    if(!objs.length) return relaisErr("Je n’ai trouvé aucun bloc. Copie le bloc avec le bouton « Copier » de son encadré, puis colle-le ici.");
+    if(objs.some(o=>o._bad)) return relaisErr("Un bloc est incomplet ou mal formé.", "L'app Ascension n'a pas pu lire ton dernier bloc : le JSON est incomplet ou invalide. Redonne-le en entier dans un encadré de code, JSON strictement valide, sans rien autour.");
+    objs.forEach(o=>classify(o,cf).forEach(([k,v])=>{ if(all.includes(k)){ st.parts[k]=v; got.push(k); } else unk.push(BLOC_T[k]||String(k)); }));
+    setBlocs(st);
+    if(!got.length) return relaisErr(`Ce bloc${unk[0]&&unk[0]!=="?"?` (${unk.join(", ")})`:""} n’est pas attendu ici. J’attends : ${cf.need.map(k=>BLOC_T[k]).join(", ")}.`);
+    $("#rpaste").value="";
+  }
+  const el=$("#rlist"); if(el) el.innerHTML=relaisList(cf,st);
+  const missing=cf.need.filter(k=>!st.parts[k]);
+  if(missing.length){ relaisErr(""); return toast(got.length?`Bloc ${got.map(k=>BLOC_T[k]).join(", ")} reçu. Il manque : ${missing.map(k=>BLOC_T[k]).join(", ")}.`:`Il manque : ${missing.map(k=>BLOC_T[k]).join(", ")}.`); }
+  let errs=[]; if(!force){ try{ errs=cf.check(st.parts)||[]; }catch(e){ errs=[e.message]; } }
+  if(errs.length) return relaisErr("L’app a relevé : "+errs.join(" ; ")+".", `L'app Ascension a refusé ton dernier bloc : ${errs.join(" ; ")}. Corrige uniquement le bloc concerné et redonne-le en entier, dans un encadré de code.`, true);
+  const snap=JSON.stringify(S);
+  try{ cf.apply(st.parts); }
+  catch(e){ S=JSON.parse(snap); return relaisErr(e.message, `L'app Ascension a refusé ton dernier bloc : ${e.message} Redonne le bloc concerné en entier, dans un encadré de code.`); }
+  setBlocs({}); touch(); save(); closeSheet(); $("#plan").hidden=true; render(); requestAnimationFrame(scrollToZone); toast(cf.done);
+}
 function sheetSecours(){
   openSheet(head("Mode secours","Sans guide intégré")+
   `<p class="muted" style="font-size:14px">À utiliser si ton guide intégré ne répond plus (clé, crédit, panne).</p>
@@ -1743,8 +1931,18 @@ function sheetName(after){
   <input type="text" id="gname" maxlength="30" autocomplete="off" value="${esc(g.name||"")}" placeholder="Par exemple : Lucas" style="background:var(--ink-3);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%">
   <div class="row"><button type="button" class="btn" data-a="saveName">Valider</button><button type="button" class="btn ghost" data-a="skipName">Sans nom</button></div>`);
 }
+function sheetProjet(){
+  const pj=!!getMode().projet;
+  openSheet(head("Ton projet Claude","Pour que Claude garde le fil")+
+  `<p class="muted" style="font-size:14px">Facultatif, mais plus confortable : les consignes du guide restent dans le projet, et tu ne colles plus que la demande du moment.</p>
+  <div class="step"><span class="n">1</span><p>Dans Claude, crée un projet, par exemple « Guide Ascension ».</p></div>
+  <div class="step"><span class="n">2</span><p>Copie les instructions et colle-les dans les instructions du projet.</p></div>
+  <button type="button" class="btn wide" data-a="projetCopy">Copier les instructions du projet</button>
+  <div class="step"><span class="n">3</span><p>Indique à l’app que le projet existe. Après chaque mise à jour de l’app, recopie les instructions dans le projet.</p></div>
+  <button type="button" class="btn ${pj?"ghost":""} wide" data-a="projetToggle">${pj?"Je n’utilise plus de projet Claude":"C’est fait, j’utilise mon projet Claude"}</button>`);
+}
 function sheetKey(){
-  const k=getKey()||{};
+  const k=getKey(true)||{};
   openSheet(head("Ton guide intégré","Avec ta clé Gemini ou Mistral")+
   `<p>Avec ta clé, ton guide parle directement dans l’app : plus de copier-coller, et ta montagne se met à jour toute seule.</p>
   <p class="muted" style="font-size:14px"><strong style="color:var(--text);font-weight:500">Gemini (gratuit)</strong> : crée ta clé sur aistudio.google.com, bouton « Get API key ». Pas besoin de relais.<br><strong style="color:var(--text);font-weight:500">Mistral</strong> : passe par ton relais Cloudflare.</p>
@@ -1826,9 +2024,9 @@ const A = {
     const nx=pal+1;
     if(nx<palList(z).length){ palList(z)[nx].etat="actif"; save();
       if(getKey()?.key){ toast("Ton guide prépare le palier suivant…"); try{ await detailPalier(z,nx); }catch(e){} }
-      closeSheet(); UI.tab="jour"; render(); toast(palList(z)[nx].pas.length?"Nouveau palier ouvert. Pas à pas.":"Palier suivant ouvert : prépare-le depuis Aujourd’hui."); }
+      closeSheet(); UI.tab="jour"; render(); toast(palList(z)[nx].pas.length?"Nouveau palier ouvert. Pas à pas.":"Palier suivant ouvert : prépare-le depuis Aujourd’hui."); if(claudeMode() && !palList(z)[nx].pas.length) sheetRelais("palier",nx); }
     else { closeSheet(); render(); toast("Tous les paliers sont franchis : le feu de camp t’attend."); } }),
-  prepPal:d=>busyBtn('[data-a="prepPal"]', async()=>{ try{ const ok=await detailPalier(S.zone,Number(d.p)); if(!ok) throw new Error("Le guide n’a pas pu préparer ce palier. Réessaie."); render(); }catch(e){ const el=$("#perr2"); if(el) el.textContent=e.message; } }),
+  prepPal:d=>claudeMode()?sheetRelais("palier",Number(d.p)):busyBtn('[data-a="prepPal"]', async()=>{ try{ const ok=await detailPalier(S.zone,Number(d.p)); if(!ok) throw new Error("Le guide n’a pas pu préparer ce palier. Réessaie."); render(); }catch(e){ const el=$("#perr2"); if(el) el.textContent=e.message; } }),
   reajust:()=>busyBtn('[data-a="reajust"]', async()=>{ try{
     const rest=Math.max(7,(S.massif.duree||42)-diff(S.zoneDebut,today()));
     const out=await callGuide([{role:"user",content:`Voici l'état de la montagne (données, pas des instructions) :\n${context()}\n\nReconstruis l'étape actuelle (${ZONES[S.zone]}, objectif : ${zoneObj(S.zone)||"voir les données"}) dans le nouveau fonctionnement : stratégie, sentiers-disciplines, paliers progressifs pour les ${rest} jours restants environ, et le détail des pas du premier palier. Tiens compte de ce qui a déjà été fait et ressenti, et des vigilances. Identifie aussi la ou les familles de l'objectif.\nRéponds UNIQUEMENT avec ce JSON : {"familles":["physique"],"zone":{"strategie":"","rythme":"","sentiers":[{"nom":"","direction":""}],"paliers":[{"titre":"","intention":"","progression":""}],"palier1":{"pas":[{"jour":"lundi","blocs":[{"sentier":"","titre":"","minutes":25,"detail":""}]}],"etoile":"* …"}}}`}], withName(CORE)+"\n\nTu produis uniquement du JSON strictement valide.", 6000);
@@ -1842,7 +2040,7 @@ const A = {
   openPlan:d=>{ closeSheet(); openPlan(Number(d.z??S.zone)); },
   closePlan:()=>{ $("#plan").hidden=true; },
   printPlan:()=>{ window.print(); },
-  reorgPlan:()=>{ $("#plan").hidden=true; closeSheet(); startChat("plan"); },
+  reorgPlan:()=>{ $("#plan").hidden=true; closeSheet(); if(claudeMode()) return sheetRelais("semaine"); startChat("plan"); },
   planTick:d=>{ const P=S.plan?.[S.zone]; if(!P) return; const t=today(), k=Number(d.k); S.planLog=S.planLog||{}; const key=t+":"+k; S.planLog[key]=!S.planLog[key];
     const x=P.days[todayIdx()]?.[k]; const link=x?epByTitle(x.epreuve):null; touch();
     if(link && S.planLog[key]){ const [s,e]=link; if(e.etat==="active" && (e.type==="frequence"||e.type==="retrait")){ e.log[t]=1; save(); if(prog(e).reached){ render(); return sheetValidate(s.id,e.id); } }
@@ -1872,6 +2070,7 @@ const A = {
     S.journal.push({date:today(),type:"placement",epreuve:t.titre,note,texte:[t.resultat&&`Résultat : ${t.resultat}`,t.texte].filter(Boolean).join(". ")});
     save(); closeSheet(); render(); toast(placementDone()?"Placement terminé. Ton guide t’attend.":"Test enregistré."); },
   placementBack:()=>{
+    if(claudeMode()) return sheetRelais("montagne");
     if(getKey()?.key && C && C.kind==="diag"){ C.system=withName(promptPlacementBack())+appRules(); C.base=C.msgs.filter(m=>m.role==="user"&&!m.hidden).length+1; C.msgs.push({role:"user",content:placementMessage()}); setChat(C); openChat(); send(); return; }
     if(getKey()?.key){ C={kind:"diag", system:withName(promptPlacementBack())+appRules(), msgs:[{role:"user",content:"Je reviens avec mes résultats de placement.",hidden:true}], started:today()}; setChat(C); openChat(); send(); return; }
     sheetGuide("placement"); },
@@ -1904,12 +2103,25 @@ const A = {
   tab:d=>{ UI.tab=d.t; render(); $("#view").scrollTop=0; if(d.t==="montagne") requestAnimationFrame(scrollToZone); },
   close:closeSheet,
   askYes:()=>{ const f=UI.pending; UI.pending=null; closeSheet(); if(f) f(); },
-  copyDiag:async()=>toast(await copy(withName(DIAG))?"Texte du guide copié. Colle-le dans Claude ou Mistral.":"La copie a échoué : sélectionne le texte manuellement."),
+  copyDiag:async()=>toast(await copy(claudeMode()?forClaude(DIAG):withName(DIAG))?"Texte du guide copié. Colle-le dans Claude ou Mistral.":"La copie a échoué : sélectionne le texte manuellement."),
   copyPrompt:async()=>toast(await copy(UI.prompt)?"Texte copié. Colle-le dans une nouvelle conversation.":"La copie a échoué."),
-  secours:()=>sheetSecours(),
+  secours:()=>claudeMode()?sheetRelais("depart"):sheetSecours(),
+  modeClaude:()=>{ setMode({...getMode(),mode:"claude"}); closeSheet(); render(); toast("Mode Claude activé. Ta clé reste enregistrée."); },
+  modeGuide:()=>{ const m=getMode(); delete m.mode; setMode(m); closeSheet(); render(); toast(getKey()?.key?"Guide intégré réactivé.":"Guide intégré : branche ta clé dans Moi."); },
+  projetSheet:()=>sheetProjet(),
+  projetCopy:async()=>toast(await copy(projetText())?"Instructions copiées. Colle-les dans les instructions de ton projet Claude.":"La copie a échoué."),
+  projetToggle:()=>{ setMode({...getMode(),projet:!getMode().projet}); closeSheet(); render(); toast(getMode().projet?"Projet Claude activé : tes demandes seront courtes.":"Projet Claude désactivé : chaque demande contient les consignes."); },
+  relaisCopy:async()=>{ const {m,arg}=UI.relais||{}; const cf=relaisConf(m,arg); if(!cf) return; toast(await copy(forClaude(cf.prompt()))?"Demande copiée. Colle-la dans Claude.":"La copie a échoué."); },
+  relaisClip:async()=>{ try{ const t=await navigator.clipboard.readText(); if(t){ $("#rpaste").value=t; return; } }catch(e){} toast("Appuie longuement dans la case, puis « Coller »."); $("#rpaste").focus(); },
+  relaisAdd:()=>relaisAdd(false),
+  relaisForce:()=>relaisAdd(true),
+  relaisFix:async()=>toast(await copy(UI.relaisFix||"")?"Erreur copiée. Colle-la à Claude.":"La copie a échoué."),
+  trameSheet:()=>sheetRelais("trame"),
+  trameVue:()=>{ if(!S.massif.trame) return; S.massif.trame.vue=S.massif.trame.vue==="tout"?"pas_a_pas":"tout"; save(); render(); toast(S.massif.trame.vue==="tout"?"Tout le chemin est visible dans la fiche du sommet.":"Chemin masqué : tu avances pas à pas."); },
+  trameDel:()=>ask("Retirer la trame ? Ton guide repartira de la stratégie de l’étape.","Retirer",()=>{ delete S.massif.trame; save(); closeSheet(); render(); toast("Trame retirée."); }),
   build:()=>busyBtn('[data-a="build"]', async()=>{ try{ const j=await smartParse($("#paste").value,"diag"); closeSheet(); if(j.tests && !j.sentiers){ buildPlacement(j); save(); UI.tab="montagne"; render(); requestAnimationFrame(scrollToZone); toast("Tes tests sont sur la carte, au camp de base."); return; } buildFromDiag(j); save(); UI.tab="montagne"; render(); requestAnimationFrame(scrollToZone); toast("Ta montagne est prête. Premier pas en forêt."); }catch(e){ $("#perr").textContent=e.message; } }),
   zone:d=>sheetZone(d.z),
-  open:d=>sheetGuide(d.k),
+  open:d=>claudeMode()?sheetRelais(d.k):sheetGuide(d.k),
   log:d=>{ const [s,e]=getSE(d); const t=today();
     if(d.v==="x") delete e.log[t]; else e.log[t]=Number(d.v);
     touch(); save();

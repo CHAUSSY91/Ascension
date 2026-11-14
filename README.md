@@ -2,7 +2,7 @@
 
 Une montagne se grimpe pas à pas. Ascension est un arbre de compétences pour la vraie vie : un guide IA construit et adapte le chemin vers un objectif (le sommet), zone par zone.
 
-**Version : v33 (14 novembre 2026). Cache : `ascension-v33`.**
+**Version : v34 (14 novembre 2026). Cache : `ascension-v34`.**
 
 Ce zip suffit pour reprendre le projet dans une nouvelle discussion. Deux documents font référence :
 
@@ -103,6 +103,14 @@ Première conversation et tests de placement, construction de la montagne, déta
 - La clé et l'adresse du relais se saisissent dans l'onglet Moi. Elles restent sur le téléphone, hors des sauvegardes.
 - Sans clé ou hors connexion, l'app fonctionne : les pas s'enregistrent, seules les réponses du guide manquent.
 
+### Le mode Claude (v34)
+- Réglage `ascension-mode` dans le téléphone (`{mode:"claude", projet:true}`), hors sauvegarde. `claudeMode()` le lit.
+- **L'aiguillage** : en mode Claude, `getKey()` renvoie `null`, donc tous les chemins « sans clé » de l'app prennent le relais et le code du guide intégré n'est pas exécuté. `getKey(true)` lit la vraie clé (réglages). En mode guide intégré, rien ne change.
+- `sheetRelais(moment, arg)` : la fiche unique du mode Claude. Moments : `depart`, `montagne`, `feu`, `palier`, `semaine`, `halte`, `bivouac`, `trame`. `relaisConf` décrit chaque moment : demande à copier, blocs attendus, contrôle, application.
+- `forClaude(texte)` prépare la demande : consignes + mission + état + cadre `RELAIS` + date. Avec un projet Claude, les consignes (`CORE`) sont retirées de la demande. `projetText()` = instructions du projet (`CORE` + `RELAIS`), toujours tirées de la version installée.
+- Les blocs : `readObjects` trouve tous les objets JSON d'un texte collé (répare virgules en trop et retours à la ligne), `classify` les range (champ `"bloc"`, ou ancien format sans ce champ), les blocs reçus attendent dans `ascension-blocs` jusqu'à ce que le moment soit complet. `relaisAdd` contrôle (`checkZoneBloc`, `checkPalier`), applique avec les fonctions existantes (`buildPlacement`, `buildFromDiag`, `applyFeu`…) et restaure l'état si l'application échoue.
+- La trame : `S.massif.trame` `{lignes, vue, date}`, envoyée au guide dans `context()` (`trame_du_programme`), règle « LA TRAME » dans `CORE`.
+
 ## 6. Tester avant de livrer
 
 - Syntaxe : extraire le contenu de `<script>` et lancer `node --check`.
@@ -122,6 +130,8 @@ Première conversation et tests de placement, construction de la montagne, déta
 - **v32** : mot du guide moins alarmiste. Deuxième essai réel : fond juste, ton trop fort. Quatre intentions au lieu de trois : « vigilance » (rare, orange, seulement si l'essentiel du pas n'est pas respecté ou vrai signal), « ajuster » (réglage de coach, affichage normal), « orienter », « encourager ». Le message ouvre sur ce qui a marché. Volet mental : un outil concret quand le mot de la personne l'appelle. Feu de camp : nouvelle étape « La tête » qui relit les mots de la zone.
 
 - **v33** : comparaison avec un programme trail écrit à la main. Détail d'un bloc structuré (mise en route, cœur chiffré, seuil d'action, fin), fin du plafond de 20 min par sentier, zones cardio dans Moi, suivi de l'échéance, bilan de palier, étape « Face à l'enjeu » au feu de camp (créneau long ou objectif de secours), sentiers de la carte posés sur les chemins de la photo.
+
+- **v34** : mode Claude greffé sur l'app (copier-coller par blocs, sans toucher au guide intégré), projet Claude, trame de programme avec le choix « tout le chemin ou pas à pas », mot du guide en pause en mode Claude.
 
 ## 8. Brancher le guide (première installation)
 

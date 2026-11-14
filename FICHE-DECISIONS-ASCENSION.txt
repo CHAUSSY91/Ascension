@@ -61,6 +61,12 @@ Base commune à toutes les discussions du projet. Fusion de la discussion « Arb
 - Zones cardio (v33) : FC de repos et FC max saisies dans Moi (mesurée ou estimée). L'app calcule 5 zones et les envoie au guide, qui en tire toutes ses cibles. Il n'invente jamais une FC max.
 - Bilan de palier (v33) : à la validation, facultatif : sommeil (1 à 5), FC au réveil, poids, douleur qui dure, un moment où le cap a été tenu. FC au réveil en hausse de 5 bpm, sommeil à 1 ou 2, douleur = signaux de fatigue. Le moment du cap nourrit « La tête » au feu de camp. FC, poids et douleur ne s'affichent que pour un objectif physique.
 - Suivi de l'échéance (v33) : l'app compare le rythme réel au calendrier (feu de camp prévu, feu au rythme actuel, marge avant le sommet). Affiché sur la montagne et dans l'onglet Sommet. Le guide n'en parle qu'à partir de 14 jours de retard ou si la marge devient négative, et propose de resserrer ou regrouper des paliers, jamais de doubler la charge.
+- Deux guides possibles (v34) : le guide intégré (clé Mistral ou Gemini) ou Claude par copier-coller. Mrik veut pouvoir quitter la clé Mistral un jour et continuer sur l'app. Le mode Claude est greffé sur l'app actuelle, pas une app à part ; le chemin du guide intégré n'est pas modifié. On bascule de l'un à l'autre quand on veut, même en pleine montée, la clé reste enregistrée.
+- Le mode Claude (v34) : à chaque moment (diagnostic, retour des tests, palier, réorganisation, feu de camp, halte, bivouac), l'app prépare une demande à copier (consignes, mission, état complet) ; la discussion se fait chez Claude ; Claude termine par des blocs que l'on colle dans l'app. Le mot du guide après chaque pas est en pause dans ce mode.
+- Les blocs (v34) : un bloc par encadré de code, collé un par un ou tous ensemble, dans n'importe quel ordre. Perso, Camp de base, Sommet, Forêt, Pentes, Falaise, Feu de camp, Palier, Semaine, Trame. On colle un bloc au moment où il sert : Perso et Camp de base au diagnostic, Sommet et Forêt après les tests, le bloc de l'étape suivante à chaque feu de camp. Si un bloc ne passe pas le contrôle, l'app donne l'erreur à recopier à Claude.
+- Le projet Claude (v34) : facultatif. Les consignes du guide vont dans les instructions du projet (bouton dans Moi), les demandes deviennent courtes et Claude garde le fil.
+- La trame (v34) : un programme d'ensemble jusqu'au sommet (construit avec le guide, ou repris d'un coach, d'un livre, d'une autre discussion). Le guide la suit à chaque palier en l'ajustant aux ressentis et aux bilans : elle guide, elle ne fige pas. On n'importe pas toutes les semaines détaillées d'un coup.
+- « Tout le chemin ou pas à pas ? » (v34) : le guide pose la question avec la phrase « voir tout le chemin d'un coup peut décourager : pas à pas, c'est souvent mieux ». Le guide construit toujours tout le chemin ; le choix porte sur ce que la personne voit (trame visible dans la fiche du sommet, ou gardée en coulisse).
 - Pertinence de l'IA : toujours y penser. Chaque nouveauté doit donner au guide les données réelles utiles et lui dire quoi en faire.
 - Hors piste : le guide reçoit les séances réelles dans l'ordre (pas prévus et hors piste, avec dates et ressentis) pour le palier en cours et le précédent. Il en tient compte dès le palier suivant, puis au feu de camp. Ce n'est jamais une faute. Si la charge réelle dépasse le plan et que les ressentis tiennent, il monte un peu. Une activité hors piste qui revient souvent s'intègre aux pas suivants.
 
@@ -123,6 +129,7 @@ Base commune à toutes les discussions du projet. Fusion de la discussion « Arb
 - La prise en compte du hors piste seulement au feu de camp : trop tard, le guide le lit dès le palier suivant.
 - Les dérives du guide : trop de médical, trop de psychologie, conclusion qui n'arrive pas, prénom inventé.
 - Les accroches A, B et C, jugées « trop Pokémon ».
+- Une nouvelle application séparée pour le mode Claude : envisagée puis abandonnée au profit de la greffe (une seule app, une seule sauvegarde, pas de mémoire partagée entre deux apps).
 - Un affûtage codé dans l'app : trop lié à la course, l'app doit couvrir tous les aspects de la vie. Le guide applique les principes du domaine.
 - Une semaine allégée planifiée toutes les 4 semaines : contredit « chaque palier plus exigeant ».
 - Le plafond de 20 minutes par sentier : il rend impossible une vraie séance d'endurance.
@@ -146,7 +153,9 @@ Base commune à toutes les discussions du projet. Fusion de la discussion « Arb
 - Distance du sommet : l'app vise le 32 km, le programme écrit à la main visait le 24 km (avis de Claude). À trancher, au plus tard au feu de camp de fin mars.
 - « Objectif de secours » : codé comme un plan B convenu au feu de camp quand le temps manque. [interprétation de Claude, à confirmer]
 - Libellé du bilan : « Un moment où tu as tenu ton cap », avec le cap rappelé dessous, pour rester valable hors sport. [à confirmer]
+- À vérifier en réel avec Claude (v34) : le respect du format des blocs, la question « tout le chemin ou pas à pas », la qualité de la trame, le confort du copier-coller sur téléphone, avec et sans projet Claude.
+- La trame en mode guide intégré : aujourd'hui elle se construit avec Claude (bouton dans Moi). Faut-il que Mistral la construise aussi au diagnostic ?
 - À vérifier en réel avec Mistral (v33) : la précision des détails de bloc, l'usage des zones cardio, la réaction au suivi de l'échéance et aux bilans, l'étape « Face à l'enjeu ».
 - Un pas fait seulement en partie : pour l'instant, il se note en séance en plus ou dans le mot pour le guide.
 
-Date : 14 novembre 2026. Version : v33 (cache ascension-v33).
+Date : 14 novembre 2026. Version : v34 (cache ascension-v34).
