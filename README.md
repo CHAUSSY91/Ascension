@@ -110,6 +110,7 @@ Première conversation et tests de placement, construction de la montagne, déta
 - `forClaude(texte)` prépare la demande : consignes + mission + état + cadre `RELAIS` + date. Avec un projet Claude, les consignes (`CORE`) sont retirées de la demande. `projetText()` = instructions du projet (`CORE` + `RELAIS`), toujours tirées de la version installée.
 - Les blocs : `readObjects` trouve tous les objets JSON d'un texte collé (répare virgules en trop et retours à la ligne), `classify` les range (champ `"bloc"`, ou ancien format sans ce champ), les blocs reçus attendent dans `ascension-blocs` jusqu'à ce que le moment soit complet. `relaisAdd` contrôle (`checkZoneBloc`, `checkPalier`), applique avec les fonctions existantes (`buildPlacement`, `buildFromDiag`, `applyFeu`…) et restaure l'état si l'application échoue.
 - `relaisFlow(moment)` ajoute à chaque demande le déroulé de l'app : il lit `diagOpening()`, `REMIND` et `OPEN`, donc le mode Claude suit automatiquement les réglages du guide intégré. Règle : ne pas réécrire le comportement du guide pour Claude, le tirer de ces textes.
+- Changement de moyens (v35) : `S.massif.changements` `[{date, champ, avant, apres, avis, integre}]`, rempli par `saveReperes`. `runAvis` / `avisChangement` demandent l'avis du guide (niveau `aucun`, `prochain_palier`, `maintenant`). `changesCtx()` les envoie au guide (`changements_recents`, `a_integrer`), `markChanges()` les marque intégrés quand un palier est détaillé. Règle « CHANGEMENT DE MOYENS » dans `CORE`.
 - La trame : `S.massif.trame` `{lignes, vue, date}`, envoyée au guide dans `context()` (`trame_du_programme`), règle « LA TRAME » dans `CORE`.
 
 ## 6. Tester avant de livrer
@@ -134,7 +135,7 @@ Première conversation et tests de placement, construction de la montagne, déta
 
 - **v34** : mode Claude greffé sur l'app (copier-coller par blocs, sans toucher au guide intégré), projet Claude, trame de programme avec le choix « tout le chemin ou pas à pas », mot du guide en pause en mode Claude.
 
-- **v35** : premier essai réel du mode Claude : Claude a relu la demande comme un texte à améliorer au lieu de jouer le guide. La demande commence maintenant par « TU ES LE GUIDE » et finit par « COMMENCE MAINTENANT ». Retours de Claude repris : détresse (ressource à chaque fois, 3114), nom du massif, nombre d'échanges en mode Claude.
+- **v35** : matériel et temps disponible modifiables dans Moi, avec l'avis immédiat du guide. Premier essai réel du mode Claude : Claude a relu la demande comme un texte à améliorer au lieu de jouer le guide. La demande commence maintenant par « TU ES LE GUIDE » et finit par « COMMENCE MAINTENANT ». Retours de Claude repris : détresse (ressource à chaque fois, 3114), nom du massif, nombre d'échanges en mode Claude.
 
 ## 8. Brancher le guide (première installation)
 
